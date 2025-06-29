@@ -327,6 +327,7 @@ export function renderGear({ gear, sectionContent }) {
   sectionContent.appendChild(list);
   console.log('[renderers.js] renderGear completed');
 }
+
 function renderGearItem(item, depth = 0) {
     console.log(`[renderers.js] renderGearItem`, { item, depth });
     const li = document.createElement('li');
@@ -404,4 +405,99 @@ function renderGearItem(item, depth = 0) {
       });
     }
     return li;
+};
+// Global modifier for all dice pools based on condition monitors
+window.ConditionMonitorModifier = 0;
+window.physicalCM = 0;
+window.stunCM = 0;
+
+function createCMTracker(label, cmOverflow, cmMax, onChange) {
+    console.log('[renderers.js] createCMTracker called', { label, cmOverflow, cmMax, onChange });
+    let value = 0;
+    const maxValue = cmMax + cmOverflow;
+    const container = document.createElement('div');
+    container.className = 'cm-tracker';
+    const title = document.createElement('span');
+    title.textContent = label + ': ';
+    container.appendChild(title);
+    const minus = document.createElement('button');
+    minus.textContent = '–';
+    minus.onclick = () => {
+      if (value > 0) {
+        value--;
+        updateDisplay();
+        onChange(value);
+      }
+    };
+    container.appendChild(minus);
+    const currentValue = document.createElement('span');
+    currentValue.textContent = value;
+    currentValue.className = 'cm-value';
+    container.appendChild(currentValue);
+    const plus = document.createElement('button');
+    plus.textContent = '+';
+    plus.onclick = () => {
+      if (value < maxValue) {
+        value++;
+        updateDisplay();
+        onChange(value);
+      }
+    };
+    container.appendChild(plus);
+    function updateDisplay() {
+      currentValue.textContent = value;
+      // Remove all state classes first
+      container.classList.remove('cm-danger', 'cm-overflow');
+      currentValue.classList.remove('cm-danger', 'cm-overflow');
+      if (value === maxValue) {
+        container.classList.add('cm-overflow');
+        currentValue.classList.add('cm-overflow');
+      } else if (value >= cmMax) {
+        container.classList.add('cm-danger');
+        currentValue.classList.add('cm-danger');
+      }
+      // Update global condition monitor modifier (cap at cmMax for modifier calculation)
+      const cappedPhysical = Math.min(window.physicalCM, window.physicalCMMax || 0);
+      const cappedStun = Math.min(window.stunCM, window.stunCMMax || 0);
+      window.ConditionMonitorModifier = -1 * (Math.floor(cappedPhysical/3) + Math.floor(cappedStun/3));
+    }
+    updateDisplay();
+    return container;
+}
+
+export function renderConditionMonitors({conditionMonitors, sectionContent}) {
+    console.log('[renderers.js] renderConditionMonitors called', conditionMonitors);
+    const cmSection = document.createElement('div');
+    cmSection.className = 'condition-monitors';
+  
+    // Store cmMax values globally for use in modifier calculation
+    window.physicalCMMax = conditionMonitors.physicalcm;
+    window.stunCMMax = conditionMonitors.stuncm;
+    
+    function updateGlobalModifier() {
+      // Calculate modifier: -1 * (floor(physicalCM/3) + floor(stunCM/3)), capping at cmMax
+      const cappedPhysical = Math.min(window.physicalCM, window.physicalCMMax || 0);
+      const cappedStun = Math.min(window.stunCM, window.stunCMMax || 0);
+      window.ConditionMonitorModifier = -1 * (Math.floor(cappedPhysical/3) + Math.floor(cappedStun/3));
+      console.log('[renderers.js] Global Condition Monitor Modifier updated:', window.ConditionMonitorModifier);
+    }
+    cmSection.appendChild(
+      createCMTracker(
+        'Physical',
+        conditionMonitors.physicalcmoverflow,
+        conditionMonitors.physicalcm,
+        v => { window.physicalCM = v; updateGlobalModifier(); }
+      )
+    );
+    cmSection.appendChild(
+      createCMTracker(
+        'Stun',
+        conditionMonitors.stuncmoverflow || 0,
+        conditionMonitors.stuncm,
+        v => { window.stunCM = v; updateGlobalModifier(); }
+      )
+    );
+    updateGlobalModifier();
+    sectionContent.appendChild(cmSection);
   }
+

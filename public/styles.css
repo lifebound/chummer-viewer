@@ -298,6 +298,38 @@ pre {
   color: var(--md-sys-color-warning, #ffb);
   margin-top: 1em;
 }
+.cm-tracker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.4em 0.8em;
+  border-radius: 0.5em;
+  background: var(--md-sys-color-surface, #fff);
+  transition: background 0.2s;
+}
+.cm-tracker .cm-value {
+  font-weight: bold;
+  font-size: 1.2em;
+  min-width: 2em;
+  text-align: center;
+  transition: color 0.2s;
+}
+.cm-tracker.cm-danger {
+  /* Orange for danger zone */
+  /* background: var(--md-sys-color-warning, #ffe5b4); */
+}
+.cm-tracker .cm-value.cm-danger {
+  color: var(--md-sys-color-warning, #b26a00);
+  font-weight: bold;
+}
+.cm-tracker.cm-overflow {
+  /* Red for dead */
+  background: var(--md-sys-color-surface, #fff);
+}
+.cm-tracker .cm-value.cm-overflow {
+  color: var(--md-sys-color-error, #b00020);
+  font-weight: bold;
+}
 @media (max-width: 600px) {
   main {
     padding: 1em;
