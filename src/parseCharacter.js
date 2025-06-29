@@ -4,7 +4,7 @@ const skillAttributeMap = require('./skillAttributeMap');
 const winston = require('winston');
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'debug',
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
   transports: [
@@ -28,6 +28,7 @@ const logger = winston.createLogger({
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
     format: winston.format.simple(),
+    forceConsole: true,
   }));
 }
 
@@ -325,10 +326,20 @@ function parseCharacter(json) {
       }
     }
   }
-  // Submersion (Technomancer)
-  extractGradeDetails(character.submersiongrade, character.initiationgrades, 'submersion');
-  // Initiation (Magician)
-  extractGradeDetails(character.initiategrade, character.initiationgrades, 'initiation');
+  logger.debug(`[PARSE-CHARACTER] Extracting submersion/initiation details: ${character.resenabled}`);
+  if(character.resenabled === 'True' || character.resenabled === true){
+    // Submersion (Technomancer)
+    logger.info('[PARSE-CHARACTER] Resonance enabled, extracting submersion details');
+    extractGradeDetails(character.submersiongrade, character.initiationgrades, 'submersion');
+  }
+  logger.debug(`[PARSE-CHARACTER] Extracting initiation details: ${character.mageenabled}`);
+  if(character.magenabled === 'True' || character.magenabled === true){
+     // Initiation (Magician)
+     logger.info('[PARSE-CHARACTER] Mage enabled, extracting initiation details');
+    extractGradeDetails(character.initiategrade, character.initiationgrades, 'initiation');
+  }
+ 
+  
 
   if (adeptPowers.length > 0) result.adeptPowers = adeptPowers;
 
