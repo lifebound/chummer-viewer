@@ -1,0 +1,17 @@
+CSP Troubleshooting Checklist:
+
+1. Open your app in the browser.
+2. Open DevTools (F12), go to the Network tab.
+3. Click on the main HTML file (index.html) in the list of requests.
+4. In the Response Headers, look for 'Content-Security-Policy'.
+5. If you see `default-src 'none'`, this is NOT from your Express server. Possible causes:
+   - A browser extension is injecting a restrictive CSP.
+   - A proxy, VPN, or reverse proxy is adding a CSP header.
+   - Your server is not setting the header (or it's being overwritten).
+6. Disable all browser extensions and reload the page.
+7. Try in a private/incognito window with all extensions disabled.
+8. If the problem persists, try a different browser or device.
+9. If you have a proxy or VPN, disable it and try again.
+10. If you are running behind nginx/Apache, check their configs for CSP headers.
+
+If you see your intended CSP (with 'self', 'unsafe-inline', etc.), the problem should be resolved.

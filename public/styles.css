@@ -1,0 +1,357 @@
+/* Material You (Material 3) inspired dark theme for Chummer Viewer */
+:root {
+  --md-sys-color-primary: #d0bcff;
+  --md-sys-color-on-primary: #381e72;
+  --md-sys-color-secondary: #ccc2dc;
+  --md-sys-color-on-secondary: #332d41;
+  --md-sys-color-surface: #1c1b1f;
+  --md-sys-color-on-surface: #e6e1e5;
+  --md-sys-color-background: #121212;
+  --md-sys-color-outline: #49454f;
+  --md-sys-shape-corner-medium: 28px;
+}
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  background: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+h1, h2, h3 {
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  letter-spacing: 0.01em;
+}
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--md-sys-color-surface);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: 0 2px 8px #000a;
+  padding: 2em;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+  margin-bottom: 2em;
+}
+mwc-button, .mdc-button, .mdc-button__label {
+  --mdc-theme-primary: var(--md-sys-color-primary);
+  --mdc-theme-on-primary: var(--md-sys-color-on-primary);
+  --mdc-theme-surface: var(--md-sys-color-surface);
+  --mdc-theme-on-surface: var(--md-sys-color-on-surface);
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 1.1em;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+.material-file-input {
+  padding: 0.75em 2em;
+  border-radius: 20px;
+  border: none;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 1.1em;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: fit-content;
+  align-self: flex-start;
+  margin-bottom: 1em;
+}
+.material-file-input::-webkit-file-upload-button {
+  padding: 0.75em 2em;
+  border-radius: 20px;
+  border: none;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 1.1em;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.material-file-input::file-selector-button {
+  padding: 0.75em 2em;
+  border-radius: 20px;
+  border: none;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-family: 'Roboto', Arial, sans-serif;
+  font-weight: 500;
+  font-size: 1.1em;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+#section-content {
+  margin-top: 2em;
+  background: #23232b;
+  border-radius: 20px;
+  box-shadow: 0 1px 4px #0004;
+  padding: 1.5em;
+  color: #e6e1e5;
+  font-size: 1.05em;
+  overflow-x: auto;
+}
+pre {
+  background: #23232b;
+  border-radius: 12px;
+  padding: 1em;
+  color: #e6e1e5;
+  font-size: 1em;
+  overflow-x: auto;
+}
+/* Add these classes to styles.css and remove inline styles from JS */
+/* .chummer-card: shared card style for spells, forms, spirits, sprites */
+/* .chummer-card-title: name row */
+/* .chummer-card-details: details row */
+/* .chummer-card-extra: extra info */
+/* .chummer-card-source: source/page info */
+/* .chummer-card-switch-label: label for switch */
+/* .chummer-card-switch-text: text for switch state */
+/* .chummer-mdc-list: for gear list root */
+/* .chummer-mdc-list-item: for gear list items */
+/* .chummer-mdc-list-meta: for gear qty */
+/* .chummer-mdc-list-expand: for chevron */
+/* .chummer-mdc-list-indent: for nested items */
+
+.chummer-card {
+  border: 1px solid var(--md-sys-color-outline, #ccc);
+  border-radius: 12px;
+  padding: 1em 1.5em;
+  background: var(--md-sys-color-surface-variant, #23272e);
+  color: var(--md-sys-color-on-surface, #fff);
+  margin-bottom: 1.5em;
+}
+.chummer-card-title {
+  font-size: 1.25em;
+  font-weight: bold;
+  margin-bottom: 0.2em;
+  cursor: pointer;
+}
+.chummer-card-details {
+  display: flex;
+  gap: 2em;
+  margin-bottom: 0.2em;
+  flex-wrap: wrap;
+}
+.chummer-card-extra {
+  margin-bottom: 0.2em;
+  font-size: 1em;
+  font-weight: 500;
+}
+.chummer-card-source {
+  font-size: 0.95em;
+  color: var(--md-sys-color-secondary, #888);
+  margin-top: 0.2em;
+}
+.chummer-card-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+}
+.chummer-card-switch-text {
+  font-weight: 500;
+  color: var(--md-sys-color-primary, #4a90e2);
+}
+.chummer-mdc-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.chummer-mdc-list-item {
+  display: flex;
+  align-items: center;
+  padding-left: 0;
+}
+.chummer-mdc-list-meta {
+  margin-left: 1em;
+}
+.chummer-mdc-list-expand {
+  cursor: pointer;
+  margin-right: 0.5em;
+}
+.chummer-mdc-list-indent {
+  padding-left: 2em;
+}
+/* Login/Register Area */
+.chummer-login-area {
+  max-width: 400px;
+  margin: 3em auto;
+  padding: 2em;
+  background: var(--md-sys-color-surface, #222);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.chummer-login-title {
+  color: var(--md-sys-color-on-surface, #fff);
+}
+.chummer-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+.chummer-login-input {
+  padding: 0.75em;
+  font-size: 1.1em;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-outline, #444);
+  background: var(--md-sys-color-surface, #222);
+  color: var(--md-sys-color-on-surface, #fff);
+}
+.chummer-login-btn {
+  padding: 0.75em;
+  font-size: 1.1em;
+  border-radius: 8px;
+  background: var(--md-sys-color-primary, #4a90e2);
+  color: var(--md-sys-color-on-primary, #fff);
+  border: none;
+  cursor: pointer;
+}
+.chummer-register-link {
+  font-size: 0.95em;
+  color: var(--md-sys-color-primary, #d0bcff);
+  text-align: center;
+  margin-top: 0.5em;
+  text-decoration: none;
+}
+.chummer-logout-btn {
+  display: none;
+  margin-top: 1em;
+  padding: 0.75em;
+  font-size: 1.1em;
+  border-radius: 8px;
+  background: var(--md-sys-color-error, #e24a4a);
+  color: var(--md-sys-color-on-error, #fff);
+  border: none;
+  cursor: pointer;
+}
+.chummer-login-message {
+  color: var(--md-sys-color-warning, #ffb);
+  margin-top: 1em;
+}
+
+/* Registration Modal */
+#register-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.chummer-register-modal-content {
+  background: var(--md-sys-color-surface, #222);
+  padding: 2em 2.5em;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px #000a;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+}
+.chummer-register-close {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: var(--md-sys-color-on-surface, #fff);
+  cursor: pointer;
+}
+.chummer-register-title {
+  color: var(--md-sys-color-primary, #d0bcff);
+  margin-bottom: 1em;
+}
+.chummer-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+.chummer-register-input {
+  padding: 0.75em;
+  font-size: 1.1em;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-outline, #444);
+  background: var(--md-sys-color-surface, #222);
+  color: var(--md-sys-color-on-surface, #fff);
+}
+.chummer-register-btn {
+  padding: 0.75em;
+  font-size: 1.1em;
+  border-radius: 8px;
+  background: var(--md-sys-color-primary, #4a90e2);
+  color: var(--md-sys-color-on-primary, #fff);
+  border: none;
+  cursor: pointer;
+}
+.chummer-register-message {
+  color: var(--md-sys-color-warning, #ffb);
+  margin-top: 1em;
+}
+@media (max-width: 600px) {
+  main {
+    padding: 1em;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  #section-content {
+    padding: 1em;
+    border-radius: 0;
+  }
+  #mdTabs {
+    width: 100vw;
+    min-width: 0;
+    max-width: 100vw;
+    overflow-x: auto;
+    font-size: 1em;
+  }
+}
+@media (min-width: 601px) and (max-width: 1024px) {
+  #mdTabs {
+    display: none !important;
+  }
+  #mdRail {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 80px;
+    background: var(--md-sys-color-surface);
+    box-shadow: 2px 0 8px #0002;
+    z-index: 10;
+  }
+  main {
+    margin-left: 80px;
+  }
+}
+@media (min-width: 1025px) {
+  #mdTabs {
+    display: none !important;
+  }
+  #mdDrawer {
+    display: block !important;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 240px;
+    background: var(--md-sys-color-surface);
+    box-shadow: 2px 0 8px #0002;
+    z-index: 10;
+  }
+  main {
+    margin-left: 240px;
+  }
+}
