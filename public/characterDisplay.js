@@ -301,6 +301,36 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     if (cmNode) sectionContent.appendChild(cmNode);
     return;
   }
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'initiationgrades') {
+    console.log('[characterDisplay.js] Rendering initiation grades');
+    const title = document.createElement('h2');
+    title.textContent = 'Initiation Grades';
+    let initiationGrades = (characterData.initiationGrades || []).slice();
+    // Sort by ascending grade
+    initiationGrades.sort((a, b) => Number(a.grade) - Number(b.grade));
+    sectionContent.appendChild(title);
+    if (!initiationGrades || initiationGrades.length === 0) {
+      const noGrades = document.createElement('div');
+      noGrades.textContent = 'No initiation grades';
+      sectionContent.appendChild(noGrades);
+      return;
+    }
+    const gradeList = document.createElement('ul');
+    initiationGrades.forEach(grade => {
+      const gradeItem = document.createElement('li');
+      // Collect modifiers
+      const modifiers = [];
+      if (grade.group) modifiers.push('Group');
+      if (grade.ordeal) modifiers.push('Ordeal');
+      if (grade.schooling) modifiers.push('Schooling');
+      let text = `Grade ${grade.grade}`;
+      if (modifiers.length) text += ` (${modifiers.join(', ')})`;
+      gradeItem.textContent = text;
+      gradeList.appendChild(gradeItem);
+    });
+    sectionContent.appendChild(gradeList);
+    return;
+  }
   // Default: show as JSON
   const keyStr = (typeof key === 'string') ? key : String(key);
   const title = document.createElement('h2');

@@ -78,7 +78,7 @@ function showTab(key) {
     });
     return;
   }
-  let myRenderedContent = ["attributes", "skills", "limits", "spells", "complexForms", "spirits", "sprites", "gear","conditionMonitor"].includes(key);
+  let myRenderedContent = ["attributes", "skills", "limits", "spells", "complexForms", "spirits", "sprites", "gear","conditionMonitor"/*,"initiationGrades"*/].includes(key);
   console.log(`Rendering content for key: ${key}, myRenderedContent: ${myRenderedContent}`);
   if (myRenderedContent) {
     console.log(`Rendering custom content for key: ${key}`);
