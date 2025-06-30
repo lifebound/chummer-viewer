@@ -15,11 +15,24 @@ const winston = require('winston');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+
+
 // Logger setup
+// const levels = {
+//   error: 0,
+//   warn: 1,
+//   info: 2,
+//   http: 3,
+//   verbose: 4,
+//   debug: 5,
+//   silly: 6
+// };
+
+
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
+  //defaultMeta: { service: 'user-service' },
   transports: [
     //
     // - Write all logs with importance level of `error` or higher to `error.log`
@@ -40,11 +53,15 @@ const logger = winston.createLogger({
 //
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
+    level: process.env.LOG_LEVEL || 'debug',
     format: winston.format.simple(),
+    forceConsole: true,
   }));
 }
 
+
 // Info: server start
+
 logger.info('[server.js] Server starting...');
 
 // Middleware setup
@@ -59,7 +76,10 @@ logger.info(`[server.js] Using default session store configuration.`);
 
 // Auth middleware
 function requireLogin(req, res, next) {
-  if (!req.session.userId) return res.status(401).json({ error: 'Login required' });
+  if (!req.session.userId) {
+    logger.warn('[server.js] Unauthorized access attempt');
+    return res.status(401).json({ error: 'Login required' });
+  }
   next();
 }
 
@@ -79,16 +99,13 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Trace IP middleware
 app.use((req, res, next) => {
-  logger.info(`[server.js] Connection from IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}`);
+  logger.http(`[server.js] HTTP ${req.method} ${req.url} from IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}`);
   next();
 });
 
 app.post('/upload', upload.single('character'), async (req, res) => {
-  logger.debug("UPLOAD ROUTE HIT!");
-  process.stdout.write("Definitely flushing to stdout\n");
-  logger.silly('Request headers:', req.headers);
-  logger.silly('Request file:', req.file);
-  logger.silly('Request body:', req.body);
+  logger.info('[server.js] Entering /upload');
+  logger.http(`[server.js] /upload request headers: ${JSON.stringify(req.headers)}`);
   if (!req.file) {
     logger.error('No file uploaded.');
     return res.status(400).json({ error: 'No file uploaded.' });
@@ -101,6 +118,11 @@ app.post('/upload', upload.single('character'), async (req, res) => {
     const summary = parseCharacter(json);
     const safeAlias = (summary.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_');
     fs.writeFileSync(`debug-chummer-dump-${safeAlias}.json`, JSON.stringify(json, null, 2));
+    // Clean up uploaded file after processing
+    fs.unlink(req.file.path, err => {
+      if (err) logger.warn(`[server.js] Failed to delete uploaded file: ${req.file.path}`);
+      else logger.debug(`[server.js] Deleted uploaded file: ${req.file.path}`);
+    });
     // If authenticated, store JSON in DB
     if (req.session && req.session.userId) {
       logger.debug(`[server.js] Authenticated upload: storing character for userId=${req.session.userId}, name=${summary.name}`);
@@ -111,8 +133,9 @@ app.post('/upload', upload.single('character'), async (req, res) => {
         logger.error(`[server.js] Error storing character in DB: ${err.stack || err}`);
       }
     } else {
-      logger.debug('[server.js] Unauthenticated upload: not storing character in DB');
+      logger.warn('[server.js] Unauthenticated upload: not storing character in DB');
     }
+    logger.info('[server.js] Leaving /upload');
     res.json(summary);
   } catch (err) {
     logger.error('Error parsing character:', err);
@@ -121,14 +144,13 @@ app.post('/upload', upload.single('character'), async (req, res) => {
 });
 
 app.post('/append-job', upload.single('character'), async (req, res) => {
+  logger.info('[server.js] Entering /append-job');
   try {
-    logger.debug('[APPEND-JOB] Request received');
     if (!req.file) {
-      logger.debug('[APPEND-JOB] No file uploaded');
+      logger.warn('[APPEND-JOB] No file uploaded');
       return res.status(400).json({ error: 'No file uploaded.' });
     }
     const xml = await readFile(req.file.path, 'utf-8');
-    logger.silly('[APPEND-JOB] Original XML loaded' );
     const parser = new XMLParser();
     let doc = parser.parse(xml);
     
@@ -139,7 +161,6 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
       },
       character: {}
     };
-    logger.silly('[APPEND-JOB] XML parsed successfully', doc);
     let jobs = [];
     if (Array.isArray(req.body.jobs)) {
       jobs = JSON.parse(req.body.jobs);
@@ -152,13 +173,11 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
         comment: req.body.comment
       }];
     }
-    logger.silly('[APPEND-JOB] Jobs to process:', jobs);
     let karmaSum = 0;
     let nuyenSum = 0;
     const now = new Date().toISOString();
     // Find or create <expenses>
     let expenses = doc.character.expenses.expense || [];
-    logger.silly('[APPEND-JOB] Existing expenses:', expenses);
     for (const job of jobs) {
       // Only create an <expense> if the value is a positive number
       const karmaVal = Number(job.karma);
@@ -181,7 +200,7 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
           ''
         );
         expenses.push(expense);
-        logger.silly('[APPEND-JOB] Added Karma expense:', expense);
+        logger.debug('[APPEND-JOB] Added Karma expense:', expense);
       }
       if (!isNaN(nuyenVal) && nuyenVal > 0) {
         nuyenSum += nuyenVal;
@@ -200,7 +219,7 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
           ''
         );
         expenses.push(expense);
-        logger.silly('[APPEND-JOB] Added Nuyen expense:', expense);
+        logger.debug('[APPEND-JOB] Added Nuyen expense:', expense);
       }
     }
     doc.character.expenses.expense = expenses;
@@ -217,7 +236,8 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
     let characterName = jsonObj.character.alias || 'character';
     let playableStatus = (jsonObj.character.created === "True" ? 'Playable' : 'Create');
     let filename = `${characterName.replace(/[^a-zA-Z0-9_-]/g, '_')}_${playableStatus}.xml`;
-    logger.debug(`[APPEND-JOB] Final filename: ${filename}`);
+    logger.info(`[APPEND-JOB] Final filename: ${filename}`);
+    logger.info('[server.js] Leaving /append-job');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'application/xml');
     res.send(updatedXml);
@@ -229,15 +249,23 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
 
 // Register
 app.post('/api/register', async (req, res) => {
+  logger.info('[server.js] Entering /api/register');
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    if (!username || !password) {
+      logger.warn('[server.js] Registration failed: missing username or password');
+      return res.status(400).json({ error: 'Username and password required' });
+    }
     const existing = await db.getUserByUsername(username);
-    if (existing) return res.status(400).json({ error: 'Username already exists' });
+    if (existing) {
+      logger.warn('[server.js] Registration failed: username already exists');
+      return res.status(400).json({ error: 'Username already exists' });
+    }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await db.createUser(username, passwordHash);
     req.session.userId = user.id;
     req.session.username = user.username;
+    logger.info('[server.js] Leaving /api/register');
     res.json({ success: true });
   } catch (e) {
     logger.error('Registration failed:', e);
@@ -247,47 +275,54 @@ app.post('/api/register', async (req, res) => {
 
 // Login
 app.post('/api/login', async (req, res) => {
+  logger.info('[server.js] Entering /api/login');
   const { username, password } = req.body;
   logger.debug(`[server.js] Login attempt for username: ${username}`);
   const user = await db.getUserByUsername(username);
   if (!user) {
-    logger.debug(`[server.js] Login failed: user not found`);
+    logger.warn('[server.js] Login failed: user not found');
     return res.status(400).json({ error: 'Invalid credentials' });
   }
   const match = await bcrypt.compare(password, user.password);
   if (!match) {
-    logger.debug(`[server.js] Login failed: password mismatch`);
+    logger.warn('[server.js] Login failed: password mismatch');
     return res.status(400).json({ error: 'Invalid credentials' });
   }
   req.session.userId = user.id;
   req.session.username = user.username;
-  logger.debug(`[server.js] Login successful for userId: ${user.id}`);
-  // Check for stored character data after login
+  logger.info('[server.js] Login successful');
   let chars = [];
   try {
     chars = await db.getCharactersByUser(user.id);
-    logger.silly(`[server.js] Character lookup for login: userId=${user.id}, count=${chars.length}`);
-    if (chars.length > 0) {
-      chars.forEach(c => logger.silly(`[server.js] Character: id=${c.id}, name=${c.name}`));
-    }
+    logger.debug(`[server.js] Character lookup for login: userId=${user.id}, count=${chars.length}`);
   } catch (e) {
     logger.error('[server.js] Error fetching characters for login:', e);
   }
+  logger.info('[server.js] Leaving /api/login');
   res.json({ success: true, characters: chars });
 });
 
 // Logout
 app.post('/api/logout', (req, res) => {
+  logger.info('[server.js] Entering /api/logout');
   logger.debug(`[server.js] Logout request for userId: ${req.session.userId}`);
-  req.session.destroy(() => res.json({ success: true }));
+  req.session.destroy(() => {
+    logger.info('[server.js] Leaving /api/logout');
+    res.json({ success: true });
+  });
 });
 
 // Save or update character (requires login)
 app.post('/api/character', requireLogin, async (req, res) => {
+  logger.info('[server.js] Entering /api/character');
   const { name, data } = req.body;
-  if (!name || !data) return res.status(400).json({ error: 'Name and data required' });
+  if (!name || !data) {
+    logger.warn('[server.js] Character save failed: missing name or data');
+    return res.status(400).json({ error: 'Name and data required' });
+  }
   try {
     const character = await db.createOrUpdateCharacter(req.session.userId, name, data);
+    logger.info('[server.js] Leaving /api/character');
     res.json({ success: true, character });
   } catch (err) {
     logger.error('Error in createOrUpdateCharacter:', err);
@@ -297,34 +332,29 @@ app.post('/api/character', requireLogin, async (req, res) => {
 
 // Get user's characters (requires login)
 app.get('/api/characters', requireLogin, async (req, res) => {
-  logger.debug(`[server.js] Checking for stored character data for userId: ${req.session.userId}`);
+  logger.info('[server.js] Entering /api/characters');
   const chars = await db.getCharactersByUser(req.session.userId);
-  if (chars.length > 0) {
-    logger.silly(`[server.js] Found ${chars.length} character(s) for userId: ${req.session.userId}`);
-  } else {
-    logger.silly(`[server.js] No characters found for userId: ${req.session.userId}`);
-  }
+  logger.debug(`[server.js] Found ${chars.length} character(s) for userId: ${req.session.userId}`);
+  logger.info('[server.js] Leaving /api/characters');
   res.json(chars);
 });
 
 // Session status endpoint
 app.get('/api/session', async (req, res) => {
+  logger.info('[server.js] Entering /api/session');
   if (req.session && req.session.userId) {
     logger.debug(`[server.js] Session check: logged in as userId ${req.session.userId}`);
-    // Look up characters for this user
     let chars = [];
     try {
       chars = await db.getCharactersByUser(req.session.userId);
-      logger.silly(`[server.js] Character lookup for session: userId=${req.session.userId}, count=${chars.length}`);
-      if (chars.length > 0) {
-        chars.forEach(c => logger.silly(`[server.js] Character: id=${c.id}, name=${c.name}`));
-      }
+      logger.debug(`[server.js] Character lookup for session: userId=${req.session.userId}, count=${chars.length}`);
     } catch (e) {
       logger.error('[server.js] Error fetching characters for session:', e);
     }
+    logger.info('[server.js] Leaving /api/session (logged in)');
     res.json({ loggedIn: true, username: req.session.username || null, characters: chars });
   } else {
-    logger.debug(`[server.js] Session check: not logged in`);
+    logger.info('[server.js] Leaving /api/session (not logged in)');
     res.json({ loggedIn: false, characters: [] });
   }
 });
