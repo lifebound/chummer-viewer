@@ -5,28 +5,16 @@ const winston = require('winston');
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.json(),
-  defaultMeta: { service: 'user-service' },
   transports: [
-    //
-    // - Write all logs with importance level of `error` or higher to `error.log`
-    //   (i.e., error, fatal, but not other levels)
-    //
     new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    //
-    // - Write all logs with importance level of `info` or higher to `combined.log`
-    //   (i.e., fatal, error, warn, and info, but not silly)
-    //
     new winston.transports.File({ filename: 'combined.log' }),
   ],
 });
-
-//
-// If we're not in production then log to the `console` with the format:
-// `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
-//
 if (process.env.NODE_ENV !== 'production') {
   logger.add(new winston.transports.Console({
+    level: process.env.LOG_LEVEL || 'debug',
     format: winston.format.simple(),
+    forceConsole: true,
   }));
 }
 
@@ -48,62 +36,104 @@ pool.connect()
 
 // User helpers
 async function createUser(username, passwordHash) {
-  const result = await pool.query(
-    'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
-    [username, passwordHash]
-  );
-  return result.rows[0];
+  logger.info('[db.js] Enter createUser');
+  try {
+    const result = await pool.query(
+      'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id, username',
+      [username, passwordHash]
+    );
+    logger.info('[db.js] Leave createUser');
+    return result.rows[0];
+  } catch (err) {
+    logger.error(`[db.js] Error in createUser: ${err.message}`);
+    throw err;
+  }
 }
 
 async function getUserByUsername(username) {
-    logger.debug(`[db.js] Fetching user by username: ${username}`);
-  const result = await pool.query(
-    'SELECT * FROM users WHERE username = $1',
-    [username]
-  );
-  logger.silly(`[db.js] User fetched: ${JSON.stringify(result.rows[0])}`);
-  return result.rows[0];
+  logger.info('[db.js] Enter getUserByUsername');
+  logger.debug(`[db.js] Fetching user by username: ${username}`);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1',
+      [username]
+    );
+    logger.info('[db.js] Leave getUserByUsername');
+    return result.rows[0];
+  } catch (err) {
+    logger.error(`[db.js] Error in getUserByUsername: ${err.message}`);
+    throw err;
+  }
 }
 
 async function getUserById(id) {
-  const result = await pool.query(
-    'SELECT * FROM users WHERE id = $1',
-    [id]
-  );
-  return result.rows[0];
+  logger.info('[db.js] Enter getUserById');
+  try {
+    const result = await pool.query(
+      'SELECT * FROM users WHERE id = $1',
+      [id]
+    );
+    logger.info('[db.js] Leave getUserById');
+    return result.rows[0];
+  } catch (err) {
+    logger.error(`[db.js] Error in getUserById: ${err.message}`);
+    throw err;
+  }
 }
 
 // Character helpers
 async function createOrUpdateCharacter(userId, name, data) {
-  logger.debug(`[db.js] Enter createOrUpdateCharacter: userId=${userId}, name=${name}`);
-  const result = await pool.query(
-    `INSERT INTO characters (user_id, name, data, created_at)
-     VALUES ($1, $2, $3, NOW())
-     ON CONFLICT (user_id, name)
-     DO UPDATE SET data = EXCLUDED.data, created_at = NOW()
-     RETURNING id, name, created_at;`,
-    [userId, name, data]
-  );
-  logger.debug(`[db.js] Exit createOrUpdateCharacter: result=${JSON.stringify(result.rows[0])}`);
-  return result.rows[0];
+  logger.info('[db.js] Enter createOrUpdateCharacter');
+  logger.debug(`[db.js] userId=${userId}, name=${name}`);
+  try {
+    const result = await pool.query(
+      `INSERT INTO characters (user_id, name, data, created_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id, name)
+       DO UPDATE SET data = EXCLUDED.data, created_at = NOW()
+       RETURNING id, name, created_at;`,
+      [userId, name, data]
+    );
+    logger.info('[db.js] Leave createOrUpdateCharacter');
+    logger.debug(`[db.js] Result: ${JSON.stringify(result.rows[0])}`);
+    return result.rows[0];
+  } catch (err) {
+    logger.error(`[db.js] Error in createOrUpdateCharacter: ${err.message}`);
+    throw err;
+  }
 }
 
 async function getCharactersByUser(userId) {
-  logger.debug(`[db.js] Enter getCharactersByUser: userId=${userId}`);
-  const result = await pool.query(
-    'SELECT * FROM characters WHERE user_id = $1 ORDER BY created_at DESC',
-    [userId]
-  );
-  logger.debug(`[db.js] Exit getCharactersByUser: count=${result.rows.length}`);
-  return result.rows;
+  logger.info('[db.js] Enter getCharactersByUser');
+  logger.debug(`[db.js] userId=${userId}`);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM characters WHERE user_id = $1 ORDER BY created_at DESC',
+      [userId]
+    );
+    logger.info('[db.js] Leave getCharactersByUser');
+    logger.debug(`[db.js] count=${result.rows.length}`);
+    return result.rows;
+  } catch (err) {
+    logger.error(`[db.js] Error in getCharactersByUser: ${err.message}`);
+    throw err;
+  }
 }
 
 async function getCharacterById(id, userId) {
-  const result = await pool.query(
-    'SELECT * FROM characters WHERE id = $1 AND user_id = $2',
-    [id, userId]
-  );
-  return result.rows[0];
+  logger.info('[db.js] Enter getCharacterById');
+  logger.debug(`[db.js] id=${id}, userId=${userId}`);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM characters WHERE id = $1 AND user_id = $2',
+      [id, userId]
+    );
+    logger.info('[db.js] Leave getCharacterById');
+    return result.rows[0];
+  } catch (err) {
+    logger.error(`[db.js] Error in getCharacterById: ${err.message}`);
+    throw err;
+  }
 }
 
 module.exports = {
