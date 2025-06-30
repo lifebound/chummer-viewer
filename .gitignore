@@ -3,3 +3,5 @@ uploads/
 *.log
 .env
 *.chum5
+public/skillAttributeMap.js
+public/spellDescriptions.js

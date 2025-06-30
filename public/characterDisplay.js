@@ -1,5 +1,5 @@
 // characterDisplay.js: Handles rendering of character summary and groups, including all group-specific logic
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear } from './renderers.js';
+import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
 
@@ -16,8 +16,9 @@ export function renderCharacterSummary(sectionContent, characterData) {
   });
 }
 
+
 export function renderCharacterTab(sectionContent, key, characterData, pendingJobs) {
-    
+    console.log(`[characterDisplay.js] Rendering section: ${key}`);
   if (key === 'character') {
     renderCharacterSummary(sectionContent, characterData);
     return;
@@ -290,6 +291,14 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
   }
   if (key.toString().toLowerCase().replace(/\s/g, '') === 'gear') {
     renderGear({ gear: characterData[key] || [], sectionContent });
+    return;
+  }
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'conditionmonitor') {
+    console.log('[characterDisplay.js] Rendering condition monitors');
+    console.log('[characterDisplay.js] Condition monitors data:', characterData[key]);
+    // Call renderConditionMonitors and append its result if present
+    const cmNode = renderConditionMonitors({ conditionMonitors: characterData[key] || {}, sectionContent });
+    if (cmNode) sectionContent.appendChild(cmNode);
     return;
   }
   // Default: show as JSON
