@@ -331,12 +331,16 @@ function parseCharacter(json) {
     // Submersion (Technomancer)
     logger.info('[PARSE-CHARACTER] Resonance enabled, extracting submersion details');
     extractGradeDetails(character.submersiongrade, character.initiationgrades, 'submersion');
+    // Extract metamagic for Technomancer
+    extractSubmersionMetaMagic(character, result);
   }
   logger.debug(`[PARSE-CHARACTER] Extracting initiation details: ${character.mageenabled}`);
   if(character.magenabled === 'True' || character.magenabled === true){
      // Initiation (Magician)
      logger.info('[PARSE-CHARACTER] Mage enabled, extracting initiation details');
     extractGradeDetails(character.initiategrade, character.initiationgrades, 'initiation');
+    // Extract metamagic for Magician
+    extractInitiationMetaMagic(character, result);
   }
  
   
@@ -492,6 +496,71 @@ function parseCharacter(json) {
   result.gear = collectAllGear(character, attributesMap);
 
   return result;
+}
+
+// --- Metamagic extraction stubs ---
+function extractSubmersionMetaMagic(character, result) {
+  logger.debug('[PARSE-CHARACTER] extractSubmersionMetaMagic called');
+  if (!character.metamagics || !character.metamagics.metamagic) return;
+  let metamagics = character.metamagics.metamagic;
+  if (!metamagics) return;
+  if (!Array.isArray(metamagics)) metamagics = [metamagics];
+  if (!Array.isArray(result.submersionGrades)) return;
+  metamagics.forEach(metamagic => {
+    if (typeof metamagic.grade !== 'undefined') {
+      const gradeNum = Number(metamagic.grade);
+      const gradeObj = result.submersionGrades.find(g => Number(g.grade) === gradeNum);
+      if (gradeObj) {
+        if (!Array.isArray(gradeObj.metamagic)) gradeObj.metamagic = [];
+        gradeObj.metamagic.push(metamagic);
+        logger.debug(`[PARSE-CHARACTER] Added metamagic to submersion grade ${gradeNum}:`, metamagic);
+      }
+    }
+  });
+}
+
+function extractInitiationMetaMagic(character, result) {
+  logger.debug('[PARSE-CHARACTER] extractInitiationMetaMagic called');
+  // Helper to normalize to array
+  function toArray(val) {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string' && val.trim() === '') return [];
+    return [val];
+  }
+  const metamagics = toArray(character.metamagics && character.metamagics.metamagic);
+  const arts = toArray(character.arts && character.arts.art);
+  const allMeta = [...metamagics, ...arts];
+  if (!Array.isArray(result.initiationGrades)) return;
+  allMeta.forEach(item => {
+    if (typeof item.grade !== 'undefined') {
+      const gradeNum = Number(item.grade);
+      const gradeObj = result.initiationGrades.find(g => Number(g.grade) === gradeNum);
+      if (gradeObj) {
+        if (!Array.isArray(gradeObj.metamagic)) gradeObj.metamagic = [];
+        gradeObj.metamagic.push(item);
+        logger.debug(`[PARSE-CHARACTER] Added metamagic/art to initiation grade ${gradeNum}:`, item);
+      }
+    }
+  });
+  // Now handle spells with category 'Enchantments' and improvementsource 'Initiation'
+  if (Array.isArray(result.spells)) {
+    result.spells.forEach(spell => {
+      if (
+        spell.category === 'Enchantments' &&
+        spell.improvementsource === 'Initiation' &&
+        typeof spell.grade !== 'undefined'
+      ) {
+        const gradeNum = Number(spell.grade);
+        const gradeObj = result.initiationGrades.find(g => Number(g.grade) === gradeNum);
+        if (gradeObj) {
+          if (!Array.isArray(gradeObj.metamagic)) gradeObj.metamagic = [];
+          gradeObj.metamagic.push(spell);
+          logger.debug(`[PARSE-CHARACTER] Added spell to initiation grade ${gradeNum}:`, spell);
+        }
+      }
+    });
+  }
 }
 
 module.exports = { parseCharacter };
