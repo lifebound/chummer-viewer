@@ -326,6 +326,19 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
       let text = `Grade ${grade.grade}`;
       if (modifiers.length) text += ` (${modifiers.join(', ')})`;
       gradeItem.textContent = text;
+      // Render metamagics as a sub-list
+      if (Array.isArray(grade.metamagic) && grade.metamagic.length > 0) {
+        const metaList = document.createElement('ul');
+        grade.metamagic.forEach(meta => {
+          const metaItem = document.createElement('li');
+          // Use improvementsource (or fallback to 'Metamagic'), then name
+          const source = meta.improvementsource || 'Metamagic';
+          const name = meta.name || meta.displayname || '(Unnamed)';
+          metaItem.textContent = `${source}: ${name}`;
+          metaList.appendChild(metaItem);
+        });
+        gradeItem.appendChild(metaList);
+      }
       gradeList.appendChild(gradeItem);
     });
     sectionContent.appendChild(gradeList);
