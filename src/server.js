@@ -12,6 +12,7 @@ const bcrypt = require('bcrypt');
 const db = require('./db');
 const { sessionMiddleware } = require('./session');
 const winston = require('winston');
+const { checkDbHealth } = require('./db-health');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
@@ -69,7 +70,7 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Session setup (PostgreSQL)
-app.use(sessionMiddleware);
+
 
 // Info: configuration assumptions
 logger.info(`[server.js] Using default session store configuration.`);
@@ -248,7 +249,7 @@ app.post('/append-job', upload.single('character'), async (req, res) => {
 });
 
 // Register
-app.post('/api/register', async (req, res) => {
+app.post('/api/register',sessionMiddleware, async (req, res) => {
   logger.info('[server.js] Entering /api/register');
   try {
     const { username, password } = req.body;
@@ -274,7 +275,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // Login
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', sessionMiddleware, async (req, res) => {
   logger.info('[server.js] Entering /api/login');
   const { username, password } = req.body;
   logger.debug(`[server.js] Login attempt for username: ${username}`);
@@ -303,7 +304,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Logout
-app.post('/api/logout', (req, res) => {
+app.post('/api/logout', sessionMiddleware, (req, res) => {
   logger.info('[server.js] Entering /api/logout');
   logger.debug(`[server.js] Logout request for userId: ${req.session.userId}`);
   req.session.destroy(() => {
@@ -403,17 +404,34 @@ function createExpenseEntry(guid,date,amount,reason,type,refund,forceCareerVisib
   };
 }
 
-// Confirm PostgreSQL connection on startup
+// Confirm PostgreSQL connection on startup, but do not exit on failure
+let dbAvailable = true;
 db.pool.connect()
   .then(client => {
     client.release();
+    logger.info('[server.js] PostgreSQL connection successful');
   })
   .catch(err => {
+    dbAvailable = false;
     logger.error('[server.js] PostgreSQL connection failed:', err.message);
+    // Do not exit; allow server to run in degraded mode
   });
 
-ensureTables();
+ensureTables().catch(err => {
+  logger.error('[server.js] ensureTables failed:', err.message);
+  // Do not exit; allow server to run in degraded mode
+});
 
 // Listen on all interfaces for mobile access
 const PORT = 3000;
 app.listen(PORT, '0.0.0.0');
+
+// Health check endpoint for DB
+app.get('/api/db-health', async (req, res) => {
+  const healthy = await checkDbHealth();
+  if (healthy) {
+    res.json({ status: 'ok' });
+  } else {
+    res.status(503).json({ status: 'down' });
+  }
+});
