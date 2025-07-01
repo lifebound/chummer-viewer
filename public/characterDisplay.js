@@ -301,11 +301,14 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     if (cmNode) sectionContent.appendChild(cmNode);
     return;
   }
-  if (key.toString().toLowerCase().replace(/\s/g, '') === 'initiationgrades') {
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'initiationgrades' || key.toString().toLowerCase().replace(/\s/g, '') === 'submersiongrades') {
     console.log('[characterDisplay.js] Rendering initiation grades');
     const title = document.createElement('h2');
     title.textContent = 'Initiation Grades';
-    let initiationGrades = (characterData.initiationGrades || []).slice();
+    if(characterData.submersionGrades) {
+      title.textContent = 'Submersion Grades';
+    }
+    let initiationGrades = ((characterData.initiationGrades || characterData.submersionGrades )|| []).slice();
     // Sort by ascending grade
     initiationGrades.sort((a, b) => Number(a.grade) - Number(b.grade));
     sectionContent.appendChild(title);
@@ -321,7 +324,14 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
       // Collect modifiers
       const modifiers = [];
       if (grade.group === 'True') modifiers.push('Group');
-      if (grade.ordeal === 'True') modifiers.push('Ordeal');
+      if (grade.ordeal === 'True') {
+        if (grade.res === 'True') 
+          {
+            modifiers.push('Task');
+          } else {
+            modifiers.push('Ordeal');
+          }
+      }
       if (grade.schooling === 'True') modifiers.push('Schooling');
       let text = `Grade ${grade.grade}`;
       if (modifiers.length) text += ` (${modifiers.join(', ')})`;
