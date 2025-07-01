@@ -386,12 +386,87 @@ function showTab(key) {
     });
     return;
   }
+
   if (key.toLowerCase().replace(/\s/g, '') === 'spells') {
     renderSpells({ spells: characterData[key] || [], spellDescriptions, sectionContent });
     return;
   }
   if (key.toLowerCase().replace(/\s/g, '') === 'complexforms') {
     renderComplexForms({ forms: characterData[key] || [], complexFormDescriptions, sectionContent });
+
+  
+  if (key === 'login') {
+    sectionContent.innerHTML = '';
+    const loginArea = document.createElement('div');
+    loginArea.id = 'login-area';
+    loginArea.style.maxWidth = '400px';
+    loginArea.style.margin = '3em auto';
+    loginArea.style.padding = '2em';
+    loginArea.style.background = 'var(--md-sys-color-surface, #222)';
+    loginArea.style.borderRadius = '16px';
+    loginArea.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15)';
+    loginArea.innerHTML = `
+      <h2 style="color:var(--md-sys-color-on-surface,#fff);">Log In</h2>
+      <form id="login-form" style="display:flex;flex-direction:column;gap:1em;">
+        <input type="text" id="username" placeholder="Username" required style="padding:0.75em;font-size:1.1em;border-radius:8px;border:1px solid var(--md-sys-color-outline,#444);background:var(--md-sys-color-surface,#222);color:var(--md-sys-color-on-surface,#fff);">
+        <input type="password" id="password" placeholder="Password" required style="padding:0.75em;font-size:1.1em;border-radius:8px;border:1px solid var(--md-sys-color-outline,#444);background:var(--md-sys-color-surface,#222);color:var(--md-sys-color-on-surface,#fff);">
+        <button type="submit" id="login-btn" style="padding:0.75em;font-size:1.1em;border-radius:8px;background:var(--md-sys-color-primary,#4a90e2);color:var(--md-sys-color-on-primary,#fff);border:none;cursor:pointer;">Log In</button>
+      </form>
+      <button id="logout-btn" style="display:none;margin-top:1em;padding:0.75em;font-size:1.1em;border-radius:8px;background:var(--md-sys-color-error,#e24a4a);color:var(--md-sys-color-on-error,#fff);border:none;cursor:pointer;">Log Out</button>
+      <div id="login-message" style="color:var(--md-sys-color-warning,#ffb);margin-top:1em;"></div>
+    `;
+    sectionContent.appendChild(loginArea);
+    // Login logic
+    function setLoggedIn(loggedIn, username) {
+      loginArea.querySelector('#login-form').style.display = loggedIn ? 'none' : '';
+      loginArea.querySelector('#logout-btn').style.display = loggedIn ? '' : 'none';
+      loginArea.querySelector('#login-message').textContent = loggedIn ? `Logged in as ${username}` : '';
+    }
+    loginArea.querySelector('#login-form').onsubmit = async function(e) {
+      e.preventDefault();
+      const username = loginArea.querySelector('#username').value;
+      const password = loginArea.querySelector('#password').value;
+      const res = await fetchWithSessionRetry('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+          console.log('Login successful:', data);
+        setLoggedIn(true, username);
+        appState.isLoggedIn = true;
+        appState.username = username;
+      } else {
+          console.error('Login failed:', data);
+        loginArea.querySelector('#login-message').textContent = data.error || 'Login failed';
+      }
+    };
+    loginArea.querySelector('#logout-btn').onclick = async function() {
+      await fetchWithSessionRetry('/api/logout', { method: 'POST' });
+      setLoggedIn(false);
+      appState.isLoggedIn = false;
+      appState.username = null;
+    };
+    setLoggedIn(false);
+    // Check DB health and hide login if DB is down
+    async function checkDbAndMaybeHideLogin() {
+      try {
+        const res = await fetch('/api/db-health');
+        if (!res.ok) throw new Error('DB down');
+        // DB is up, do nothing
+      } catch (e) {
+        // Hide login area if present
+        const loginArea = document.getElementById('login-area');
+        if (loginArea) {
+          loginArea.innerHTML = '<div style="color:#ffb;background:#222;padding:2em;border-radius:12px;text-align:center;">Database unavailable. Please try again later.</div>';
+        }
+        // Optionally hide login tab/menu if you want
+        // document.querySelector('[data-key="login"]').style.display = 'none';
+      }
+    }
+    setTimeout(checkDbAndMaybeHideLogin, 0);
+
     return;
   }
   const title = document.createElement('h2');
