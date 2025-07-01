@@ -529,7 +529,9 @@ function extractInitiationMetaMagic(character, result) {
     return [val];
   }
   const metamagics = toArray(character.metamagics && character.metamagics.metamagic);
-  const arts = toArray(character.arts && character.arts.art);
+  let arts = toArray(character.arts && character.arts.art);
+  // Set improvementsource to 'art' for all arts
+  arts = arts.map(art => ({ ...art, improvementsource: 'art' }));
   const allMeta = [...metamagics, ...arts];
   if (!Array.isArray(result.initiationGrades)) return;
   allMeta.forEach(item => {

@@ -320,9 +320,9 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
       const gradeItem = document.createElement('li');
       // Collect modifiers
       const modifiers = [];
-      if (grade.group) modifiers.push('Group');
-      if (grade.ordeal) modifiers.push('Ordeal');
-      if (grade.schooling) modifiers.push('Schooling');
+      if (grade.group === 'True') modifiers.push('Group');
+      if (grade.ordeal === 'True') modifiers.push('Ordeal');
+      if (grade.schooling === 'True') modifiers.push('Schooling');
       let text = `Grade ${grade.grade}`;
       if (modifiers.length) text += ` (${modifiers.join(', ')})`;
       gradeItem.textContent = text;
