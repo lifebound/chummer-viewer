@@ -262,6 +262,23 @@ function showTab(key) {
       appState.username = null;
     };
     setLoggedIn(false);
+    // Check DB health and hide login if DB is down
+    async function checkDbAndMaybeHideLogin() {
+      try {
+        const res = await fetch('/api/db-health');
+        if (!res.ok) throw new Error('DB down');
+        // DB is up, do nothing
+      } catch (e) {
+        // Hide login area if present
+        const loginArea = document.getElementById('login-area');
+        if (loginArea) {
+          loginArea.innerHTML = '<div style="color:#ffb;background:#222;padding:2em;border-radius:12px;text-align:center;">Database unavailable. Please try again later.</div>';
+        }
+        // Optionally hide login tab/menu if you want
+        // document.querySelector('[data-key="login"]').style.display = 'none';
+      }
+    }
+    setTimeout(checkDbAndMaybeHideLogin, 0);
     return;
   }
   const title = document.createElement('h2');
