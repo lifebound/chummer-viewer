@@ -1,5 +1,5 @@
 // characterDisplay.js: Handles rendering of character summary and groups, including all group-specific logic
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear } from './renderers.js';
+import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
 
@@ -16,8 +16,9 @@ export function renderCharacterSummary(sectionContent, characterData) {
   });
 }
 
+
 export function renderCharacterTab(sectionContent, key, characterData, pendingJobs) {
-    
+    console.log(`[characterDisplay.js] Rendering section: ${key}`);
   if (key === 'character') {
     renderCharacterSummary(sectionContent, characterData);
     return;
@@ -290,6 +291,67 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
   }
   if (key.toString().toLowerCase().replace(/\s/g, '') === 'gear') {
     renderGear({ gear: characterData[key] || [], sectionContent });
+    return;
+  }
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'conditionmonitor') {
+    console.log('[characterDisplay.js] Rendering condition monitors');
+    console.log('[characterDisplay.js] Condition monitors data:', characterData[key]);
+    // Call renderConditionMonitors and append its result if present
+    const cmNode = renderConditionMonitors({ conditionMonitors: characterData[key] || {}, sectionContent });
+    if (cmNode) sectionContent.appendChild(cmNode);
+    return;
+  }
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'initiationgrades' || key.toString().toLowerCase().replace(/\s/g, '') === 'submersiongrades') {
+    console.log('[characterDisplay.js] Rendering initiation grades');
+    const title = document.createElement('h2');
+    title.textContent = 'Initiation Grades';
+    if(characterData.submersionGrades) {
+      title.textContent = 'Submersion Grades';
+    }
+    let initiationGrades = ((characterData.initiationGrades || characterData.submersionGrades )|| []).slice();
+    // Sort by ascending grade
+    initiationGrades.sort((a, b) => Number(a.grade) - Number(b.grade));
+    sectionContent.appendChild(title);
+    if (!initiationGrades || initiationGrades.length === 0) {
+      const noGrades = document.createElement('div');
+      noGrades.textContent = 'No initiation grades';
+      sectionContent.appendChild(noGrades);
+      return;
+    }
+    const gradeList = document.createElement('ul');
+    initiationGrades.forEach(grade => {
+      const gradeItem = document.createElement('li');
+      // Collect modifiers
+      const modifiers = [];
+      if (grade.group === 'True') modifiers.push('Group');
+      if (grade.ordeal === 'True') {
+        if (grade.res === 'True') 
+          {
+            modifiers.push('Task');
+          } else {
+            modifiers.push('Ordeal');
+          }
+      }
+      if (grade.schooling === 'True') modifiers.push('Schooling');
+      let text = `Grade ${grade.grade}`;
+      if (modifiers.length) text += ` (${modifiers.join(', ')})`;
+      gradeItem.textContent = text;
+      // Render metamagics as a sub-list
+      if (Array.isArray(grade.metamagic) && grade.metamagic.length > 0) {
+        const metaList = document.createElement('ul');
+        grade.metamagic.forEach(meta => {
+          const metaItem = document.createElement('li');
+          // Use improvementsource (or fallback to 'Metamagic'), then name
+          const source = meta.improvementsource || 'Metamagic';
+          const name = meta.name || meta.displayname || '(Unnamed)';
+          metaItem.textContent = `${source}: ${name}`;
+          metaList.appendChild(metaItem);
+        });
+        gradeItem.appendChild(metaList);
+      }
+      gradeList.appendChild(gradeItem);
+    });
+    sectionContent.appendChild(gradeList);
     return;
   }
   // Default: show as JSON

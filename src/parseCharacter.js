@@ -529,7 +529,9 @@ function extractInitiationMetaMagic(character, result) {
     return [val];
   }
   const metamagics = toArray(character.metamagics && character.metamagics.metamagic);
-  const arts = toArray(character.arts && character.arts.art);
+  let arts = toArray(character.arts && character.arts.art);
+  // Set improvementsource to 'Art' for all arts
+  arts = arts.map(art => ({ ...art, improvementsource: 'Art' }));
   const allMeta = [...metamagics, ...arts];
   if (!Array.isArray(result.initiationGrades)) return;
   allMeta.forEach(item => {
@@ -555,6 +557,7 @@ function extractInitiationMetaMagic(character, result) {
         const gradeObj = result.initiationGrades.find(g => Number(g.grade) === gradeNum);
         if (gradeObj) {
           if (!Array.isArray(gradeObj.metamagic)) gradeObj.metamagic = [];
+          spell.improvementsource = 'Enchantment';
           gradeObj.metamagic.push(spell);
           logger.debug(`[PARSE-CHARACTER] Added spell to initiation grade ${gradeNum}:`, spell);
         }

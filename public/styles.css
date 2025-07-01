@@ -314,10 +314,7 @@ pre {
   text-align: center;
   transition: color 0.2s;
 }
-.cm-tracker.cm-danger {
-  /* Orange for danger zone */
-  /* background: var(--md-sys-color-warning, #ffe5b4); */
-}
+
 .cm-tracker .cm-value.cm-danger {
   color: var(--md-sys-color-warning, #b26a00);
   font-weight: bold;
