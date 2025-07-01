@@ -1,11 +1,9 @@
 import 'https://unpkg.com/@material/web/all.js?module';
 import { initUploadForm } from './upload.js';
 import { renderAdaptiveNavigation } from './navigation.js';
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear } from './renderers.js';
+import { renderSpells, renderComplexForms } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
-import { renderCharacterSummary, renderCharacterTab} from './characterDisplay.js'
-import  {fetchWithSessionRetry, uploadCharacterFile,login,logout,checkSession,appendJob} from './client.js';
 
 const sectionContent = document.getElementById('section-content');
 const uploadForm = document.getElementById('uploadForm');
@@ -14,14 +12,10 @@ const fileName = document.getElementById('fileName');
 
 // --- Modular App Initialization ---
 
-// Global app state object
-const appState = {
-  isLoggedIn: false,
-  username: null,
-  characterData: null,
-  tabItems: [],
-  pendingJobs: [],
-};
+// State
+let characterData = null;
+let tabItems = [];
+let pendingJobs = [];
 
 function buildTabItems(data) {
   console.log('Building tab items from data:', data);
@@ -45,17 +39,17 @@ function buildTabItems(data) {
       items.push({ label, key: k, icon, content: v });
     }
   });
-  // Add Karma & Nuyen section to navigationf
+  // Add Karma & Nuyen section to navigation
   items.push({ label: 'Karma & Nuyen', key: 'karmaNuyen', icon: 'savings', content: null });
   items.push({ label: 'Upload', key: 'upload', icon: 'upload', content: null });
-  items.push({ label: 'Login', key: 'login', icon: 'logout', content: null });
+  
   return items;
 }
 
 function showTab(key) {
   console.log('Showing tab:', key);
   sectionContent.innerHTML = '';
-  appState.tabItems.forEach(item => {
+  tabItems.forEach(item => {
     const tab = Array.from(document.querySelectorAll('#mdTabs md-primary-tab')).find(t => t.getAttribute('label') === item.label);
     if (tab) tab.selected = (item.key === key);
   });
@@ -69,7 +63,7 @@ function showTab(key) {
     const title = document.createElement('h2');
     title.textContent = 'Character';
     sectionContent.appendChild(title);
-    Object.entries(appState.characterData).forEach(([k, v]) => {
+    Object.entries(characterData).forEach(([k, v]) => {
       if (typeof v !== 'object' || v === null) {
         const row = document.createElement('div');
         row.innerHTML = `<span class='json-label'>${k}:</span> <span class='json-value'>${v}</span>`;
@@ -78,16 +72,201 @@ function showTab(key) {
     });
     return;
   }
-  let myRenderedContent = ["attributes", "skills", "limits", "spells", "complexForms", "spirits", "sprites", "gear","conditionMonitor","initiationGrades","submersionGrades"].includes(key);
-  console.log(`Rendering content for key: ${key}, myRenderedContent: ${myRenderedContent}`);
-  if (myRenderedContent) {
-    console.log(`Rendering custom content for key: ${key}`);
-    console.log('Current character data:', appState.characterData);
-    console.log('Current appState:', appState);
-    renderCharacterTab(sectionContent, key, appState.characterData);
+  if (key === 'attributes') {
+    const title = document.createElement('h2');
+    title.textContent = 'Attributes';
+    sectionContent.appendChild(title);
+    const list = document.createElement('div');
+    list.style.display = 'flex';
+    list.style.flexDirection = 'column';
+    list.style.gap = '1em';
+    (characterData[key] || []).forEach(attr => {
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.alignItems = 'center';
+      row.style.gap = '1em';
+      // Compute complete value
+      let base = attr.totalvalue || 0;
+      let adeptMod = attr.adeptMod || 0;
+      let complete = base + adeptMod;
+      // Attribute name
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = attr.name;
+      nameSpan.style.fontWeight = 'bold';
+      nameSpan.style.minWidth = '6em';
+      // Complete value (add asterisk if different from base)
+      let valueText = complete;
+      if (complete !== base) valueText += ' *';
+      const valueSpan = document.createElement('span');
+      valueSpan.textContent = valueText;
+      valueSpan.style.fontSize = '1.2em';
+      valueSpan.style.fontWeight = 'bold';
+      row.appendChild(nameSpan);
+      row.appendChild(valueSpan);
+      list.appendChild(row);
+    });
+    sectionContent.appendChild(list);
     return;
   }
-  
+  if (key === 'skills') {
+    const title = document.createElement('h2');
+    title.textContent = 'Skills';
+    sectionContent.appendChild(title);
+    // Toggles
+    const togglesDiv = document.createElement('div');
+    togglesDiv.style.display = 'flex';
+    togglesDiv.style.gap = '2em';
+    togglesDiv.style.marginBottom = '1em';
+    // Show/hide 0-value skills
+    const showZeroToggle = document.createElement('label');
+    showZeroToggle.style.cursor = 'pointer';
+    const showZeroCheckbox = document.createElement('input');
+    showZeroCheckbox.type = 'checkbox';
+    showZeroCheckbox.checked = false;
+    showZeroToggle.appendChild(showZeroCheckbox);
+    showZeroToggle.appendChild(document.createTextNode(' Show 0-value skills'));
+    togglesDiv.appendChild(showZeroToggle);
+    // Sort toggle
+    const sortToggle = document.createElement('label');
+    sortToggle.style.cursor = 'pointer';
+    const sortCheckbox = document.createElement('input');
+    sortCheckbox.type = 'checkbox';
+    sortCheckbox.checked = false;
+    sortToggle.appendChild(sortCheckbox);
+    sortToggle.appendChild(document.createTextNode(' Sort by dice pool'));
+    togglesDiv.appendChild(sortToggle);
+    sectionContent.appendChild(togglesDiv);
+    // Render skills list
+    function renderSkillsList() {
+      let skills = (characterData[key] || []).slice();
+      // Hide 0-value skills unless toggled
+      if (!showZeroCheckbox.checked) {
+        skills = skills.filter(skill => {
+          const group = skill.skillGroupTotal || 0;
+          const base = skill.base || 0;
+          const karma = skill.karma || 0;
+          return group > 0 || base + karma > 0;
+        });
+      }
+      // Compute dice pool for each skill
+      skills.forEach(skill => {
+        // Find associated attribute using skillAttributeMap
+        const attrName = skillAttributeMap[skill.name] || skill.linkedAttributeName || skill.linkedAttribute || 'Attribute';
+        const attrObj = (characterData.attributes || []).find(a => a.name === attrName);
+        const attrVal = attrObj ? Number(attrObj.totalvalue || 0) : 0;
+        // Skill value: group or base+karma
+        let skillVal = 0;
+        if (Number(skill.skillGroupTotal) > 0) {
+          skillVal = Number(skill.skillGroupTotal);
+        } else {
+          skillVal = Number(skill.base || 0) + Number(skill.karma || 0);
+        }
+        // Add adeptMod and skillsoftMod if present (for skills only)
+        skillVal += Number(skill.adeptMod || 0) + Number(skill.skillsoftMod || 0);
+        // Dice pool = skill value + attribute value
+        skill._dicePool = skillVal + attrVal;
+        skill._attrName = attrName;
+      });
+      // Sort
+      if (sortCheckbox.checked) {
+        skills.sort((a, b) => b._dicePool - a._dicePool || a.name.localeCompare(b.name));
+      } else {
+        skills.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      // Render
+      const list = document.createElement('div');
+      list.style.display = 'flex';
+      list.style.flexDirection = 'column';
+      list.style.gap = '0.5em';
+      skills.forEach(skill => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '1em';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = skill.name;
+        nameSpan.style.fontWeight = 'bold';
+        nameSpan.style.minWidth = '10em';
+        // Attribute label
+        const attrSpan = document.createElement('span');
+        attrSpan.textContent = `(${skill._attrName})`;
+        attrSpan.style.fontSize = '0.95em';
+        attrSpan.style.color = 'var(--md-sys-color-secondary, #b0b0b0)';
+        attrSpan.style.marginRight = '0.5em';
+        // Dice pool
+        const dicePoolSpan = document.createElement('span');
+        dicePoolSpan.textContent = skill._dicePool;
+        dicePoolSpan.style.fontWeight = 'bold';
+        dicePoolSpan.style.fontSize = '1.1em';
+        row.appendChild(nameSpan);
+        row.appendChild(attrSpan);
+        row.appendChild(dicePoolSpan);
+        list.appendChild(row);
+      });
+      // Replace old list
+      const oldList = sectionContent.querySelector('.skills-list');
+      if (oldList) oldList.remove();
+      list.className = 'skills-list';
+      sectionContent.appendChild(list);
+    }
+    showZeroCheckbox.addEventListener('change', renderSkillsList);
+    sortCheckbox.addEventListener('change', renderSkillsList);
+    renderSkillsList();
+    return;
+  }
+  if (key === 'limits') {
+    const limits = characterData[key] || {};
+    const limitNames = Object.keys(limits);
+    const title = document.createElement('h2');
+    title.textContent = 'Limits';
+    sectionContent.appendChild(title);
+    limitNames.forEach(lim => {
+      const limData = limits[lim];
+      const limSection = document.createElement('section');
+      limSection.style.marginBottom = '2em';
+      // Find highest modifier value (absolute)
+      let maxMod = 0;
+      if (Array.isArray(limData.modifiers) && limData.modifiers.length > 0) {
+        maxMod = Math.max(...limData.modifiers.map(m => Math.abs(Number(m.value) || 0)));
+      }
+      // Compute base total (minus highest modifier)
+      const baseTotal = limData.total - maxMod;
+      // Limit header
+      const limHeader = document.createElement('div');
+      limHeader.style.fontWeight = 'bold';
+      limHeader.style.fontSize = '1.2em';
+      limHeader.style.marginBottom = '0.3em';
+      limHeader.textContent = `${lim}: ${baseTotal}`;
+      limSection.appendChild(limHeader);
+      // Modifiers list
+      if (Array.isArray(limData.modifiers) && limData.modifiers.length > 0) {
+        const modList = document.createElement('ul');
+        modList.style.marginLeft = '1.5em';
+        modList.style.marginTop = '0.2em';
+        limData.modifiers.forEach(mod => {
+          const modItem = document.createElement('li');
+          const val = Number(mod.value) || 0;
+          const sign = val > 0 ? '+' : val < 0 ? '-' : '';
+          const absVal = Math.abs(val);
+          let modText = `${sign}${absVal}`;
+          if (mod.source && mod.source.trim()) {
+            modText += ` (${mod.source}`;
+            if (mod.condition && mod.condition.trim()) {
+              modText += `, ${mod.condition}`;
+            }
+            modText += ')';
+          } else if (mod.condition && mod.condition.trim()) {
+            modText += ` (${mod.condition})`;
+          }
+          modItem.textContent = modText;
+          modList.appendChild(modItem);
+        });
+        limSection.appendChild(modList);
+      }
+      sectionContent.appendChild(limSection);
+    });
+    return;
+  }
   if (key === 'karmaNuyen') {
     const title = document.createElement('h2');
     title.textContent = 'Karma & Nuyen';
@@ -97,14 +276,14 @@ function showTab(key) {
     warn.style.color = 'var(--md-sys-color-warning, #b26a00)';
     warn.style.marginBottom = '0.5em';
     warn.style.fontWeight = 'bold';
-    warn.innerHTML = "Please only enter positive values for Karma or Nuyen.<br>You can run downtime on your own time!";
+    warn.textContent = 'Please only enter positive values for Karma or Nuyen. You can run downtime on your own time!';
     sectionContent.appendChild(warn);
     // Display current values
     const valuesDiv = document.createElement('div');
     valuesDiv.style.display = 'flex';
     valuesDiv.style.gap = '2em';
     valuesDiv.style.marginBottom = '1.5em';
-    valuesDiv.innerHTML = `<span><strong>Karma:</strong> ${appState.characterData.karma ?? '—'}</span><span><strong>Nuyen:</strong> ${appState.characterData.nuyen ?? '—'}</span>`;
+    valuesDiv.innerHTML = `<span><strong>Karma:</strong> ${characterData.karma ?? '—'}</span><span><strong>Nuyen:</strong> ${characterData.nuyen ?? '—'}</span>`;
     sectionContent.appendChild(valuesDiv);
     // Add Job form
     const form = document.createElement('form');
@@ -125,7 +304,7 @@ function showTab(key) {
     sectionContent.appendChild(jobsList);
     function renderJobsList() {
       jobsList.innerHTML = '';
-      appState.pendingJobs.forEach((job, idx) => {
+      pendingJobs.forEach((job, idx) => {
         const li = document.createElement('li');
         li.textContent = `+${job.karma} Karma, +${job.nuyen} Nuyen: ${job.comment}`;
         jobsList.appendChild(li);
@@ -139,7 +318,7 @@ function showTab(key) {
       const nuyen = formData.get('nuyen');
       const comment = formData.get('comment');
       if (!karma && !nuyen) return;
-      appState.pendingJobs.push({ karma, nuyen, comment });
+      pendingJobs.push({ karma, nuyen, comment });
       renderJobsList();
       form.reset();
     });
@@ -158,7 +337,7 @@ function showTab(key) {
     const applyBtn = uploadDiv.querySelector('#applyJobsBtn');
     const statusMsg = uploadDiv.querySelector('#jobStatusMsg');
     applyBtn.addEventListener('click', async () => {
-      if (!xmlInput.files.length || !appState.pendingJobs.length) {
+      if (!xmlInput.files.length || !pendingJobs.length) {
         statusMsg.textContent = 'Please select a file and add at least one job.';
         return;
       }
@@ -167,13 +346,13 @@ function showTab(key) {
       let file = xmlInput.files[0];
       let fileBlob = file;
       let lastResp = null;
-      for (const job of appState.pendingJobs) {
+      for (const job of pendingJobs) {
         const formData = new FormData();
         formData.append('character', fileBlob, file.name);
         formData.append('karmaEarned', job.karma);
         formData.append('nuyenEarned', job.nuyen);
         formData.append('comment', job.comment);
-        const resp = await fetchWithSessionRetry('/append-job', { method: 'POST', body: formData });
+        const resp = await fetch('/append-job', { method: 'POST', body: formData });
         lastResp = resp;
         if (!resp.ok) {
           statusMsg.textContent = 'Error updating XML.';
@@ -202,122 +381,58 @@ function showTab(key) {
         URL.revokeObjectURL(url);
       }, 100);
       statusMsg.textContent = 'Download ready!';
-      appState.pendingJobs = [];
+      pendingJobs = [];
       renderJobsList();
     });
     return;
   }
-  
-  if (key === 'login') {
-    sectionContent.innerHTML = '';
-    const loginArea = document.createElement('div');
-    loginArea.id = 'login-area';
-    loginArea.style.maxWidth = '400px';
-    loginArea.style.margin = '3em auto';
-    loginArea.style.padding = '2em';
-    loginArea.style.background = 'var(--md-sys-color-surface, #222)';
-    loginArea.style.borderRadius = '16px';
-    loginArea.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15)';
-    loginArea.innerHTML = `
-      <h2 style="color:var(--md-sys-color-on-surface,#fff);">Log In</h2>
-      <form id="login-form" style="display:flex;flex-direction:column;gap:1em;">
-        <input type="text" id="username" placeholder="Username" required style="padding:0.75em;font-size:1.1em;border-radius:8px;border:1px solid var(--md-sys-color-outline,#444);background:var(--md-sys-color-surface,#222);color:var(--md-sys-color-on-surface,#fff);">
-        <input type="password" id="password" placeholder="Password" required style="padding:0.75em;font-size:1.1em;border-radius:8px;border:1px solid var(--md-sys-color-outline,#444);background:var(--md-sys-color-surface,#222);color:var(--md-sys-color-on-surface,#fff);">
-        <button type="submit" id="login-btn" style="padding:0.75em;font-size:1.1em;border-radius:8px;background:var(--md-sys-color-primary,#4a90e2);color:var(--md-sys-color-on-primary,#fff);border:none;cursor:pointer;">Log In</button>
-      </form>
-      <button id="logout-btn" style="display:none;margin-top:1em;padding:0.75em;font-size:1.1em;border-radius:8px;background:var(--md-sys-color-error,#e24a4a);color:var(--md-sys-color-on-error,#fff);border:none;cursor:pointer;">Log Out</button>
-      <div id="login-message" style="color:var(--md-sys-color-warning,#ffb);margin-top:1em;"></div>
-    `;
-    sectionContent.appendChild(loginArea);
-    // Login logic
-    function setLoggedIn(loggedIn, username) {
-      loginArea.querySelector('#login-form').style.display = loggedIn ? 'none' : '';
-      loginArea.querySelector('#logout-btn').style.display = loggedIn ? '' : 'none';
-      loginArea.querySelector('#login-message').textContent = loggedIn ? `Logged in as ${username}` : '';
-    }
-    loginArea.querySelector('#login-form').onsubmit = async function(e) {
-      e.preventDefault();
-      const username = loginArea.querySelector('#username').value;
-      const password = loginArea.querySelector('#password').value;
-      const res = await fetchWithSessionRetry('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
-      if (data.success) {
-          console.log('Login successful:', data);
-        setLoggedIn(true, username);
-        appState.isLoggedIn = true;
-        appState.username = username;
-      } else {
-          console.error('Login failed:', data);
-        loginArea.querySelector('#login-message').textContent = data.error || 'Login failed';
-      }
-    };
-    loginArea.querySelector('#logout-btn').onclick = async function() {
-      await fetchWithSessionRetry('/api/logout', { method: 'POST' });
-      setLoggedIn(false);
-      appState.isLoggedIn = false;
-      appState.username = null;
-    };
-    setLoggedIn(false);
+  if (key.toLowerCase().replace(/\s/g, '') === 'spells') {
+    renderSpells({ spells: characterData[key] || [], spellDescriptions, sectionContent });
+    return;
+  }
+  if (key.toLowerCase().replace(/\s/g, '') === 'complexforms') {
+    renderComplexForms({ forms: characterData[key] || [], complexFormDescriptions, sectionContent });
     return;
   }
   const title = document.createElement('h2');
   title.textContent = key.charAt(0).toUpperCase() + key.slice(1);
   sectionContent.appendChild(title);
   const pre = document.createElement('pre');
-  pre.textContent = JSON.stringify(appState.characterData[key], null, 2);
+  pre.textContent = JSON.stringify(characterData[key], null, 2);
   sectionContent.appendChild(pre);
 }
 
-
-
-function displayCharacter(appState) {
-  //renderCharacterSummary(sectionContent, characterData);
-  showTabswithData(appState);
-  // Optionally render groups, tabs, etc.
-}
-
-function showTabswithData(appState) {
-  console.log('Showing tabs with data:', appState.characterData);
-  appState.tabItems = buildTabItems(appState.characterData);
-  let defaultTab = appState.tabItems.find(item => item.key === 'character') || appState.find(item => item.key === 'upload') || appState.tabItems[0];
-  renderAdaptiveNavigation({ items: appState.tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
-  showTab(defaultTab.key);
-  console.log('Tabs rendered with items:', appState.tabItems);
-}
-
-function showUploadError(err) {
-  sectionContent.innerHTML = `<div style="color:#e74c3c">Upload failed: ${err.message || err}</div>`;
-}
-
-// // Helper: fetch with session retry (basic version)
-// async function fetchWithSessionRetry(url, options = {}) {
-//   try {
-//     const res = await fetch(url, options);
-//     // If session expired, try to clear cookie and retry once
-//     if (res.status === 401) {
-//       document.cookie = 'connect.sid=; Max-Age=0; path=/;';
-//       return fetch(url, options);
-//     }
-//     return res;
-//   } catch (err) {
-//     throw err;
-//   }
-// }
-
-// Replace upload form submit logic:
-// uploadForm.addEventListener('submit', async (e) => {
-//   e.preventDefault();
-//   const file = characterInput.files[0];
-//   if (!file) {
-//     sectionContent.innerHTML = '<div style="color:#e74c3c">Please select a file to upload.</div>';
-//     return;
-//   }
-//   await handleUpload(file);
-// });
+uploadForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  console.log('Upload form submitted');
+  const formData = new FormData(uploadForm);
+  const file = characterInput.files[0];
+  if (!file) {
+    sectionContent.innerHTML = '<div style="color:#e74c3c">Please select a file to upload.</div>';
+    return;
+  }
+  try {
+    const response = await fetch('/upload', {
+      method: 'POST',
+      body: formData
+    });
+    console.log('Upload response:', response);
+    if (!response.ok) {
+      sectionContent.innerHTML = '<div style="color:#e74c3c">Upload failed.</div>';
+      return;
+    }
+    characterData = await response.json();
+    console.log('Received characterData:', characterData);
+    tabItems = buildTabItems(characterData);
+    // Prefer 'Character' tab if present, else first non-upload tab
+    let defaultTab = tabItems.find(t => t.key === 'character') || tabItems.find(t => t.key !== 'upload');
+    renderAdaptiveNavigation({ items: tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
+    showTab(defaultTab.key);
+  } catch (err) {
+    console.error('Network or server error:', err);
+    sectionContent.innerHTML = '<div style="color:#e74c3c">Network or server error.</div>';
+  }
+});
 
 characterInput.addEventListener('change', () => {
   fileName.textContent = characterInput.files.length ? characterInput.files[0].name : '';
@@ -326,46 +441,9 @@ characterInput.addEventListener('change', () => {
 
 // On load, hide tabs and show upload
 window.addEventListener('DOMContentLoaded', () => {
-  console.log('[app.js] DOMContentLoaded event fired');
-  
+  initUploadForm({ sectionContent, characterInput, fileName, onUpload });
   let tabBar = document.getElementById('mdTabs');
-  //if (tabBar) tabBar.style.display = 'none';
-  //uploadForm.style.display = '';
-  //console.log('[app.js] Upload form shown, tabs hidden');
-  // Build default nav items if not present
-  if (!appState.tabItems || appState.tabItems.length === 0) {
-    console.log('[app.js] No tabItems found, initializing default navigation items');
-    appState.tabItems = [
-      { label: 'Upload', key: 'upload', icon: 'upload', content: null },
-      { label: 'Login', key: 'login', icon: 'logout', content: null }
-    ];
-  } else {
-    console.log('[app.js] tabItems already present:', appState.tabItems);
-  }
-  // --- INJECT NAVIGATION INTO MWC-LIST ---
-  const drawerList = document.getElementById('drawerList');
-  if (drawerList) {
-    drawerList.innerHTML = '';
-    appState.tabItems.forEach(item => {
-      const mwcItem = document.createElement('mwc-list-item');
-      mwcItem.setAttribute('graphic', 'icon');
-      mwcItem.setAttribute('tabindex', '0');
-      mwcItem.innerHTML = `<span class="material-icons" slot="graphic">${item.icon}</span>${item.label}`;
-      mwcItem.addEventListener('click', () => showTab(item.key));
-      drawerList.appendChild(mwcItem);
-    });
-    console.log('[app.js] Navigation injected into <mwc-list>:', appState.tabItems);
-  } else {
-    console.warn('[app.js] <mwc-list id="drawerList"> not found!');
-  }
-  renderAdaptiveNavigation({ items: appState.tabItems, selectedKey: 'upload', onTabSelect: showTab });
-  initUploadForm({ sectionContent, characterInput, fileName, onUpload: (characterData) => {
-    console.log('[app.js] Character uploaded:', characterData);
-    console.log('current appState:', appState);
-    appState.characterData = characterData;
-    displayCharacter(appState);
-  }});
-  // --- END INJECT ---
-  // Optionally, show the default tab
-  showTab('upload');
+  if (tabBar) tabBar.style.display = 'none';
+  uploadForm.style.display = '';
+  console.log('DOMContentLoaded: upload form shown, tabs hidden');
 });

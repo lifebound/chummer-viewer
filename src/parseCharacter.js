@@ -571,17 +571,17 @@ function extractInitiationMetaMagic(character, result) {
 
 
 function processCyberwareBioware(character) {
-    logger.debug('[PARSE-CHARACTER] processCyberwareBioware called');
+    logger.info('[PARSE-CHARACTER] processCyberwareBioware called');
     const cyberware = [];
     const bioware = [];
     // New unified extraction from character.cyberware.cyberwares
-    logger.debug(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
+    logger.verbose(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
     if (character.cyberwares && character.cyberwares.cyberware) {
       const wareList = Array.isArray(character.cyberwares.cyberware)
         ? character.cyberwares.cyberware
         : [character.cyberwares.cyberware];
       wareList.forEach(ware => {
-        logger.verbose(`[PARSE-CHARACTER] Processing ware: ${JSON.stringify(ware)}`);
+        logger.debug(`[PARSE-CHARACTER] Processing ware: ${JSON.stringify(ware)}`);
         const processed = {
           name: ware.name,
           limbslot: ware.limbslot || '',
