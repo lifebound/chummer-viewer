@@ -326,6 +326,7 @@ function parseCharacter(json) {
       }
     }
   }
+  
   logger.debug(`[PARSE-CHARACTER] Extracting submersion/initiation details: ${character.resenabled}`);
   if(character.resenabled === 'True' || character.resenabled === true){
     // Submersion (Technomancer)
@@ -342,8 +343,10 @@ function parseCharacter(json) {
     // Extract metamagic for Magician
     extractInitiationMetaMagic(character, result);
   }
- 
-  
+  const { bioware, cyberware } = processCyberwareBioware(character);
+  result.cyberware = cyberware;
+  logger.debug(`[PARSE-CHARACTER] Processed cyberware: ${JSON.stringify(cyberware)}`);
+  result.bioware = bioware;
 
   if (adeptPowers.length > 0) result.adeptPowers = adeptPowers;
 
@@ -565,5 +568,40 @@ function extractInitiationMetaMagic(character, result) {
     });
   }
 }
+
+
+function processCyberwareBioware(character) {
+    logger.debug('[PARSE-CHARACTER] processCyberwareBioware called');
+    const cyberware = [];
+    const bioware = [];
+    // New unified extraction from character.cyberware.cyberwares
+    logger.debug(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
+    if (character.cyberwares && character.cyberwares.cyberware) {
+      const wareList = Array.isArray(character.cyberwares.cyberware)
+        ? character.cyberwares.cyberware
+        : [character.cyberwares.cyberware];
+      wareList.forEach(ware => {
+        logger.verbose(`[PARSE-CHARACTER] Processing ware: ${JSON.stringify(ware)}`);
+        const processed = {
+          name: ware.name,
+          limbslot: ware.limbslot || '',
+          limbslotcount: ware.limbslotcount || 0,
+          rating: ware.rating || '',
+          grade: ware.grade || '',
+          source: ware.source && ware.page ? `${ware.source} ${ware.page}` : '',
+          extra: ware.extra || '',
+          bonus: ware.bonus || {},
+        };
+        logger.debug(`[PARSE-CHARACTER] Processed ware: ${JSON.stringify(processed)}`);
+        if (ware.improvementsource === 'Bioware') {
+          bioware.push(processed);
+        } else {
+          cyberware.push(processed);
+        }
+      });
+    }
+    return {bioware, cyberware};
+    
+  }
 
 module.exports = { parseCharacter };
