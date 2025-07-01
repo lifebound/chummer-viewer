@@ -469,6 +469,7 @@ function showTab(key) {
 
     return;
   }
+  }
   const title = document.createElement('h2');
   title.textContent = key.charAt(0).toUpperCase() + key.slice(1);
   sectionContent.appendChild(title);
