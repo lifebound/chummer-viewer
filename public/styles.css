@@ -106,19 +106,7 @@ pre {
   font-size: 1em;
   overflow-x: auto;
 }
-/* Add these classes to styles.css and remove inline styles from JS */
-/* .chummer-card: shared card style for spells, forms, spirits, sprites */
-/* .chummer-card-title: name row */
-/* .chummer-card-details: details row */
-/* .chummer-card-extra: extra info */
-/* .chummer-card-source: source/page info */
-/* .chummer-card-switch-label: label for switch */
-/* .chummer-card-switch-text: text for switch state */
-/* .chummer-mdc-list: for gear list root */
-/* .chummer-mdc-list-item: for gear list items */
-/* .chummer-mdc-list-meta: for gear qty */
-/* .chummer-mdc-list-expand: for chevron */
-/* .chummer-mdc-list-indent: for nested items */
+
 
 .chummer-card {
   border: 1px solid var(--md-sys-color-outline, #ccc);
@@ -405,4 +393,65 @@ mdui-card span {
     margin-bottom: 0.5rem; /* 8px */
     padding: 0.75rem;      /* 12px */
   }
+}
+ html, body {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+}
+@media (max-width: 1100px) {
+  html, body {
+    font-size: 30px;
+  }
+  mdui-top-app-bar-title {
+    font-size: 1.3em;
+  }
+  mdui-navigation-rail {
+    width: 100px;
+    min-width: 100px;
+  }
+  mdui-navigation-rail-item {
+    font-size: 1.1em;
+    min-height: 80px;
+    padding: 0.75em 0.5em;
+  }
+  mdui-button, button, input[type="file"] {
+    font-size: 1.1em;
+    min-height: 75px;
+    padding: 0.75em 1.5em;
+  }
+  .material-file-input {
+    font-size: 1.1em;
+    min-height: 48px;
+    padding: 0.75em 0.5em;
+  }
+  form#uploadForm {
+    gap: 2em;
+  }
+}
+mdui-layout {
+  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+mdui-layout-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  height: 100vh;
+}
+mdui-navigation-rail {
+  height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+  /* Optional: for touch devices */
+  -webkit-overflow-scrolling: touch;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }

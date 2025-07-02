@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Chummer Character Viewer</title>
-  <link rel="stylesheet" href="styles.css">
+  
   <!-- Material Web Components CDN -->
   <script type="module" src="https://unpkg.com/@material/web/all.js?module"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel="stylesheet" href="mdui.css">
+  <!-- <link rel="stylesheet" href="mdui.css"> -->
   <!-- <script src="https://unpkg.com/mdui@2/mdui.global.js"></script> -->
   <!-- Filled -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -24,69 +24,9 @@
 
 <!-- Two Tone -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Two+Tone" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 <style>
-  html, body {
-  height: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-}
-@media (max-width: 1100px) {
-  html, body {
-    font-size: 30px;
-  }
-  mdui-top-app-bar-title {
-    font-size: 1.3em;
-  }
-  mdui-navigation-rail {
-    width: 100px;
-    min-width: 100px;
-  }
-  mdui-navigation-rail-item {
-    font-size: 1.1em;
-    min-height: 80px;
-    padding: 0.75em 0.5em;
-  }
-  mdui-button, button, input[type="file"] {
-    font-size: 1.1em;
-    min-height: 75px;
-    padding: 0.75em 1.5em;
-  }
-  .material-file-input {
-    font-size: 1.1em;
-    min-height: 48px;
-    padding: 0.75em 0.5em;
-  }
-  form#uploadForm {
-    gap: 2em;
-  }
-}
-
-mdui-layout {
-  min-height: 100vh;
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
-
-mdui-layout-main {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  height: 100vh;
-}
-mdui-navigation-rail {
-  height: 100vh;
-  max-height: 100vh;
-  overflow-y: auto;
-  flex-shrink: 0;
-  /* Optional: for touch devices */
-  -webkit-overflow-scrolling: touch;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
+ 
 </style>
   <!-- <style>
     body { margin: 0; font-family: 'Roboto', Arial, sans-serif; }

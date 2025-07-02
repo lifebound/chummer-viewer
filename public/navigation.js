@@ -26,6 +26,7 @@ export function buildTabItems(data) {
   console.log('Building tab items from data:', data);
   const summaryFields = {};
   const items = [];
+  items.push({ label: 'Login', key: 'login', icon: 'login', content: null });
   items.push({ label: 'Upload', key: 'upload', icon: 'upload', content: null });
 
   // Only loop if data is a non-null object
