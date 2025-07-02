@@ -384,3 +384,25 @@ pre {
     margin-left: 240px;
   }
 }
+mdui-card span {
+  display: block;
+  margin-top: 0.3em;
+}
+.card-line {
+  display: block;
+  margin-top: 0.3em;
+}
+.chummer-card, mdui-card {
+  margin-bottom: 1rem; /* 16px */
+  /* Optional: add horizontal margin for mobile */
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+  padding: 1rem; /* 16px */
+  box-sizing: border-box;
+}
+@media (max-width: 1025px) {
+  .chummer-card, mdui-card {
+    margin-bottom: 0.5rem; /* 8px */
+    padding: 0.75rem;      /* 12px */
+  }
+}

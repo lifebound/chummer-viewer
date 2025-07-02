@@ -18,7 +18,32 @@ function makeCollapsible(container, nameNode, contentNodes) {
     nameNode.style.textDecoration = expanded ? 'underline' : '';
   });
 }
+function makeMDUICritterCard(nameNode,bindingTerm,forceTerm,ServiceTerm,classsName = 'mdui-card') {
+  console.log('[renderers.js] makeMDUICard called', { nameNode, bindingTerm });
+  // Hide all content nodes initially (collapsed)
+  let mduiCard = document.createElement('mdui-card');
+  let mduiSwitch = document.createElement('md-switch');
+  mduiSwitch.title = bindingTerm;
+  mduiCard.textContent = nameNode.name;
+  mduiCard.className = classsName
 
+  //mduiCard.appendChild(mduiSwitch);
+  // let span1 = document.createElement('span');
+  // span1.innerHTML = `<strong>Type:</strong> ${nameNode.type ?? '—'}`;
+  // span1.classList = 'card-line';
+  // mduiCard.appendChild(span1);
+  let span2 = document.createElement('span');
+  span2.innerHTML = `<strong>${forceTerm}:</strong> ${nameNode.force ?? '—'}`;
+  span2.classList = 'card-line';
+  mduiCard.appendChild(span2);
+  let span3 = document.createElement('span');
+  span3.innerHTML = `<strong>${ServiceTerm}:</strong> ${nameNode.services ?? '—'}`;
+  span3.classList = 'card-line';
+  mduiCard.appendChild(span3);
+  mduiCard.clickable = true;
+  return mduiCard;
+  // Add MDUi card styles
+}
 export function renderSpells({ spells, spellDescriptions, sectionContent }) {
   console.log('[renderers.js] renderSpells called');
   const title = document.createElement('h2');
@@ -226,6 +251,26 @@ export function renderSpirits({ spirits, sectionContent }) {
 }
 
 export function renderSprites({ sprites, sectionContent }) {
+  console.log('[renderers.js] renderSprites called');
+  const title = document.createElement('h2');
+  title.textContent = 'Sprites';
+  console.log(`[renderers.js] title: ${title.textContent}`);
+  sectionContent.appendChild(title);
+  console.log(`[renderers.js] sectionContent:`, sectionContent);
+  if (!Array.isArray(sprites) || !sprites.length) {
+    sectionContent.appendChild(document.createTextNode('No sprites found.'));
+    return;
+  }
+  sprites.forEach(sprite => {
+    console.log(`[renderers.js] Processing sprite: ${sprite.name || '(Unnamed)'}`);
+    const spriteCard = makeMDUICritterCard(sprite,'Registered','Rating','Tasks');
+
+    sectionContent.appendChild(spriteCard);
+  });
+  return
+}
+
+export function OLDrenderSprites({ sprites, sectionContent }) {
   const title = document.createElement('h2');
   title.textContent = 'Sprites';
   sectionContent.appendChild(title);
