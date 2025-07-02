@@ -84,7 +84,7 @@ export function showTab(key) {
     valuesDiv.style.display = 'flex';
     valuesDiv.style.gap = '2em';
     valuesDiv.style.marginBottom = '1.5em';
-    valuesDiv.innerHTML = `<span><strong>Karma:</strong> ${characterData.karma ?? '—'}</span><span><strong>Nuyen:</strong> ${characterData.nuyen ?? '—'}</span>`;
+    valuesDiv.innerHTML = `<span><strong>Karma:</strong> ${appState.characterData.karma ?? '—'}</span><span><strong>Nuyen:</strong> ${appState.characterData.nuyen ?? '—'}</span>`;
     sectionContent.appendChild(valuesDiv);
     // Add Job form
     const form = document.createElement('form');
@@ -261,8 +261,7 @@ export function showTab(key) {
 
     return;
   }
-  uploadForm.style.display = 'none';
-
+  
     renderCharacterTab(sectionContent,key,appState.characterData);
     return;
 
@@ -270,7 +269,8 @@ export function showTab(key) {
 
 function initEventListenerUpload(){
   console.log('Initializing upload event listener for uploadForm');
-  uploadForm = document.getElementById('uploadForm');
+  let uploadForm = document.getElementById('uploadForm');
+  let sectionContent = document.querySelectorAll('mdui-layout-main')[0];
   uploadForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   var uploadForm = document.getElementById('uploadForm');
@@ -357,7 +357,7 @@ function renderUploadTab(sectionContent) {
   // fileNameSpan.style.color = 'var(--md-sys-color-on-surface, #494949)';
   // fileNameSpan.style.fontSize = '1em';
   // form.appendChild(fileNameSpan);
-  const submitButton = document.createElement('button');
+  const submitButton = document.createElement('mdui-button');
   submitButton.type = 'submit';
   submitButton.textContent = 'Upload';
   form.appendChild(submitButton);

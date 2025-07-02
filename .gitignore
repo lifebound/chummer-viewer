@@ -5,3 +5,4 @@ uploads/
 *.chum5
 public/skillAttributeMap.js
 public/spellDescriptions.js
+debug-chummer-dump*.json
