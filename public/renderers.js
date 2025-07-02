@@ -18,6 +18,36 @@ function makeCollapsible(container, nameNode, contentNodes) {
     nameNode.style.textDecoration = expanded ? 'underline' : '';
   });
 }
+function makeMDUICritterCard(nameNode,bindingTerm,forceTerm,ServiceTerm,classsName = 'mdui-card') {
+  console.log('[renderers.js] makeMDUICard called', { nameNode, bindingTerm });
+  // Hide all content nodes initially (collapsed)
+  let mduiCard = document.createElement('mdui-card');
+  let mduiSwitch = document.createElement('md-switch');
+  mduiSwitch.title = bindingTerm;
+  mduiCard.textContent = nameNode.name;
+  mduiCard.className = classsName
+
+  //mduiCard.appendChild(mduiSwitch);
+  // let span1 = document.createElement('span');
+  // span1.innerHTML = `<strong>Type:</strong> ${nameNode.type ?? '—'}`;
+  // span1.classList = 'card-line';
+  // mduiCard.appendChild(span1);
+  let span2 = document.createElement('span');
+  span2.innerHTML = `<strong>${forceTerm}:</strong> ${nameNode.force ?? '—'}`;
+  span2.classList = 'card-line';
+  mduiCard.appendChild(span2);
+  let span3 = document.createElement('span');
+  span3.innerHTML = `<strong>${ServiceTerm}:</strong> ${nameNode.services ?? '—'}`;
+  span3.classList = 'card-line';
+  mduiCard.appendChild(span3);
+  mduiCard.clickable = true;
+  return mduiCard;
+  // Add MDUi card styles
+}
+function makeMDUISpellCard(nameNode, typeTerm, rangeTerm, durationTerm, dvTerm, classsName = 'mdui-card') {
+  console.log('[renderers.js] makeMDUISpellCard called', { nameNode, typeTerm, rangeTerm, durationTerm, dvTerm });
+  // Hide all content nodes initially (
+}
 
 export function renderSpells({ spells, spellDescriptions, sectionContent }) {
   console.log('[renderers.js] renderSpells called');
@@ -146,6 +176,24 @@ export function renderComplexForms({ forms, complexFormDescriptions, sectionCont
 }
 
 export function renderSpirits({ spirits, sectionContent }) {
+  console.log('[renderers.js] renderSpirits called');
+  const title = document.createElement('h2');
+  title.textContent = 'Spirits';
+  sectionContent.appendChild(title);
+  if (!Array.isArray(spirits) || !spirits.length) {
+    sectionContent.appendChild(document.createTextNode('No spirits found.'));
+    return;
+  }
+  spirits.forEach(spirit => {
+    console.log(`[renderers.js] Processing spirit: ${spirit.name || '(Unnamed)'}`);
+    const spiritCard = makeMDUICritterCard(spirit,'Bound','Force','Services');
+    sectionContent.appendChild(spiritCard);
+  });
+  return;
+
+
+}
+export function OLDrenderSpirits({ spirits, sectionContent }) {
   const title = document.createElement('h2');
   title.textContent = 'Spirits';
   sectionContent.appendChild(title);
@@ -226,84 +274,25 @@ export function renderSpirits({ spirits, sectionContent }) {
 }
 
 export function renderSprites({ sprites, sectionContent }) {
+  console.log('[renderers.js] renderSprites called');
   const title = document.createElement('h2');
   title.textContent = 'Sprites';
+  console.log(`[renderers.js] title: ${title.textContent}`);
   sectionContent.appendChild(title);
+  console.log(`[renderers.js] sectionContent:`, sectionContent);
   if (!Array.isArray(sprites) || !sprites.length) {
     sectionContent.appendChild(document.createTextNode('No sprites found.'));
     return;
   }
-  const list = document.createElement('div');
-  list.style.display = 'flex';
-  list.style.flexDirection = 'column';
-  list.style.gap = '1.5em';
   sprites.forEach(sprite => {
-    const spriteDiv = document.createElement('div');
-    spriteDiv.className = 'chummer-card';
-    spriteDiv.style.display = 'flex';
-    spriteDiv.style.alignItems = 'center';
-    spriteDiv.style.justifyContent = 'space-between';
-    // Left: Name and details
-    const leftDiv = document.createElement('div');
-    leftDiv.style.flex = '1 1 auto';
-    // Name row with switch
-    const nameRow = document.createElement('div');
-    nameRow.className = 'chummer-card-details';
-    const name = document.createElement('span');
-    name.className = 'chummer-card-title';
-    name.textContent = sprite.name || '(Unnamed)';
-    nameRow.appendChild(name);
-    // Material switch
-    const switchLabel = document.createElement('label');
-    switchLabel.className = 'chummer-card-switch-label';
-    const matSwitch = document.createElement('md-switch');
-    matSwitch.selected = !!sprite.bound;
-    matSwitch.setAttribute('aria-label', 'Registered');
-    switchLabel.appendChild(matSwitch);
-    const regText = document.createElement('span');
-    regText.className = 'chummer-card-switch-text';
-    regText.textContent = matSwitch.selected ? 'Registered' : '';
-    switchLabel.appendChild(regText);
-    matSwitch.addEventListener('input', () => {
-      regText.textContent = matSwitch.selected ? 'Registered' : '';
-    });
-    nameRow.appendChild(switchLabel);
-    leftDiv.appendChild(nameRow);
-    // Collapsible content
-    const contentNodes = [];
-    // Details row
-    const details = document.createElement('div');
-    details.className = 'chummer-card-details';
-    details.innerHTML =
-      `<span style="min-width:7em; display: inline-block"><strong>Type:</strong> ${sprite.type ?? '—'}</span>` +
-      `<span style="min-width:7em; display: inline-block"><strong>Rating:</strong> ${sprite.force ?? '—'}</span>` +
-      `<span style="min-width:7em; display: inline-block"><strong>Tasks:</strong> ${sprite.services ?? '—'}</span>`;
-    leftDiv.appendChild(details);
-    contentNodes.push(details);
-    // Powers (if present)
-    if (sprite.powers && sprite.powers.length) {
-      const powers = document.createElement('div');
-      powers.className = 'chummer-card-extra';
-      powers.textContent = `Powers: ${sprite.powers.join(', ')}`;
-      leftDiv.appendChild(powers);
-      contentNodes.push(powers);
-    }
-    // Source and page (smaller text)
-    const src = (sprite.source ? String(sprite.source) : '').trim();
-    const page = (sprite.page ? String(sprite.page) : '').trim();
-    if (src || page) {
-      const srcPage = document.createElement('div');
-      srcPage.className = 'chummer-card-source';
-      srcPage.textContent = `${src}${src && page ? ', ' : ''}${page}`;
-      leftDiv.appendChild(srcPage);
-      contentNodes.push(srcPage);
-    }
-    makeCollapsible(leftDiv, name, contentNodes);
-    spriteDiv.appendChild(leftDiv);
-    list.appendChild(spriteDiv);
+    console.log(`[renderers.js] Processing sprite: ${sprite.name || '(Unnamed)'}`);
+    const spriteCard = makeMDUICritterCard(sprite,'Registered','Rating','Tasks');
+
+    sectionContent.appendChild(spriteCard);
   });
-  sectionContent.appendChild(list);
+  return
 }
+
 
 export function renderGear({ gear, sectionContent }) {
   console.log('[renderers.js] renderGear called', gear);

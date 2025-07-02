@@ -19,6 +19,11 @@ export function renderCharacterSummary(sectionContent, characterData) {
 
 export function renderCharacterTab(sectionContent, key, characterData, pendingJobs) {
     console.log(`[characterDisplay.js] Rendering section: ${key}`);
+  if (key === 'upload' || key === 'uploadCharacter' || key === 'uploadCharacterFile') {
+    console.log('[characterDisplay.js] Rendering upload section');
+    renderUploadTab(sectionContent);
+    return;
+  }
   if (key === 'character') {
     renderCharacterSummary(sectionContent, characterData);
     return;
