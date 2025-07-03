@@ -489,4 +489,94 @@ export function renderConditionMonitors({conditionMonitors, sectionContent}) {
     updateGlobalModifier();
     sectionContent.appendChild(cmSection);
   }
+export function renderCyberware({ cyberBioWare, sectionContent }) {
+    console.log('[renderers.js] renderCyberware called', cyberBioWare);
+    const cbSection = document.createElement('div');
+    cbSection.className = 'cyber-bio-ware';
 
+    // Render each cyberware item
+    cyberBioWare.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'cyber-bio-item';
+        itemElement.textContent = item.name;
+        cbSection.appendChild(itemElement);
+    });
+
+    sectionContent.appendChild(cbSection);
+}
+export function renderBioware({ cyberBioWare, sectionContent }) {
+    console.log('[renderers.js] renderBioware called', cyberBioWare);
+    const cbSection = document.createElement('div');
+    cbSection.className = 'cyber-bio-ware';
+    // Render each bioware item
+    cyberBioWare.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'cyber-bio-item';
+        itemElement.textContent = item.name;
+        cbSection.appendChild(itemElement);
+    });
+    sectionContent.appendChild(cbSection);
+}
+
+
+function makeMDUIWaresCard(ware, classsName = 'mdui-card') {
+  console.log('[renderers.js] makeMDUIWaresCard called', { ware, classsName });
+  const mduiCard = document.createElement('mdui-card');
+  mduiCard.textContent = ware.name;
+  mduiCard.className = classsName;
+
+  // Type
+  const span1 = document.createElement('span');
+  span1.innerHTML = `<strong>Type:</strong> ${ware.type ?? '—'}`;
+  span1.classList = 'card-line';
+  mduiCard.appendChild(span1);
+
+  // Rating
+  const span2 = document.createElement('span');
+  span2.innerHTML = `<strong>Rating:</strong> ${ware.rating} ?? '—'}`;
+  span2.classList = 'card-line';
+  mduiCard.appendChild(span2);
+  
+  //limb and limb slot
+  if (ware.limb) {
+    const span3 = document.createElement('span');
+    span3.innerHTML = `<strong>Limb:</strong> ${ware.limb}`;
+    span3.classList = 'card-line';
+    mduiCard.appendChild(span3);
+  }
+  if (ware.limbslot) {
+    const span4 = document.createElement('span');
+    span4.innerHTML = `<strong>Limb Slot:</strong> ${ware.limbslot}`;
+    span4.classList = 'card-line';
+    mduiCard.appendChild(span4);
+  }
+  // Extra (if present)
+  if (ware.extra && String(ware.extra).trim()) {
+    const extra = document.createElement('div');
+    extra.textContent = `Extra: ${ware.extra}`;
+    mduiCard.appendChild(extra);
+  }
+  //process bonuses. If there's only one, it won't be an array, so we need to handle that
+  if (ware.bonus) {
+    const bonusDiv = document.createElement('div');
+    bonusDiv.className = 'chummer-card-bonus';
+    if (Array.isArray(ware.bonus)) {
+      bonusDiv.textContent = `Bonuses: ${ware.bonus.map(b => b.name || b).join(', ')}`;
+    } else {
+      bonusDiv.textContent = `Bonus: ${ware.bonus.name || ware.bonus}`;
+    }
+    mduiCard.appendChild(bonusDiv);
+  }
+  // Source and page (smaller text)
+  const src = (ware.source ? String(ware.source) : '').trim();
+  const page = (ware.page ? String(ware.page) : '').trim();
+  if (src || page) {
+    const srcPage = document.createElement('div');
+    srcPage.className = 'chummer-card-source';
+    srcPage.textContent = `${src}${src && page ? ', ' : ''}${page}`;
+    mduiCard.appendChild(srcPage);
+  }
+
+  mduiCard.clickable = true;
+  return mduiCard;
+}
