@@ -2,6 +2,7 @@ const skillGroupMap = require('./skillGroupMap');
 const { extractLimitModifiersFromBonus } = require('./limitConditionMap');
 const skillAttributeMap = require('./skillAttributeMap');
 const winston = require('winston');
+const { parse } = require('uuid');
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -494,7 +495,9 @@ function parseCharacter(json) {
     }
     return allGear;
   }
-
+  const vehicles = parseVehicles(character);
+  result.vehicles = vehicles;
+  logger.debug(`[PARSE-CHARACTER] Processed vehicles: ${JSON.stringify(vehicles)}`);
   const attributesMap = extractAttributesMap(filteredAttributes);
   result.gear = collectAllGear(character, attributesMap);
 
@@ -571,12 +574,12 @@ function extractInitiationMetaMagic(character, result) {
 
 
 function processCyberwareBioware(character) {
-    logger.info('[PARSE-CHARACTER] processCyberwareBioware called');
-    const cyberware = [];
-    const bioware = [];
-    // New unified extraction from character.cyberware.cyberwares
-    logger.verbose(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
-    if (character.cyberwares && character.cyberwares.cyberware) {
+  logger.info('[PARSE-CHARACTER] processCyberwareBioware called');
+  const cyberware = [];
+  const bioware = [];
+  // New unified extraction from character.cyberware.cyberwares
+  logger.verbose(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
+  if (character.cyberwares && character.cyberwares.cyberware) {
       const wareList = Array.isArray(character.cyberwares.cyberware)
         ? character.cyberwares.cyberware
         : [character.cyberwares.cyberware];
@@ -599,9 +602,58 @@ function processCyberwareBioware(character) {
           cyberware.push(processed);
         }
       });
-    }
-    return {bioware, cyberware};
-    
   }
+  return {bioware, cyberware};
+    
+}
+
+// function to handle parsing vehicles
+function parseVehicles(character) {
+  logger.info('[PARSE-CHARACTER] parseVehicles called');
+  const vehicles = [];
+  if (character.vehicles && character.vehicles.vehicle) {
+    const vehicleList = Array.isArray(character.vehicles.vehicle)
+      ? character.vehicles.vehicle
+      : [character.vehicles.vehicle];
+    vehicleList.forEach(vehicle => {
+      logger.debug(`[PARSE-CHARACTER] Processing vehicle: ${JSON.stringify(vehicle)}`);
+      const processed = {
+        name: vehicle.name || '',
+        category: vehicle.category || '',
+        rating: vehicle.devicerating[0] || '',
+        //weaponmounts can be null, or have .weaponmount, which can be an array or a single object. if it's null, we omit it.
+        weaponmounts: vehicle.weaponmounts && vehicle.weaponmounts.weaponmount
+          ? Array.isArray(vehicle.weaponmounts.weaponmount)
+            ? vehicle.weaponmounts.weaponmount
+            : [vehicle.weaponmounts.weaponmount]
+          : [],
+        source: vehicle.source && vehicle.page ? `${vehicle.source} ${vehicle.page}` : '',
+        //gears can be null, or have .gear, which can be an array or a single object. if it's null, we omit it.
+        gears: vehicle.gears && vehicle.gears.gear
+          ? Array.isArray(vehicle.gears.gear)
+            ? vehicle.gears.gear
+            : [vehicle.gears.gear]
+          : [],
+        //mods can be null, or have .mod, which can be an array or a single object. if it's null, we omit it.
+        mods: vehicle.mods && vehicle.mods.mod
+          ? Array.isArray(vehicle.mods.mod)
+            ? vehicle.mods.mod
+            : [vehicle.mods.mod]
+          : [],
+          //add seats, armor, accel, handling, speed, pilot, and sensor
+        seats: vehicle.seats || 0,
+        armor: vehicle.armor || 0,
+        accel: vehicle.accel || 0,
+        handling: vehicle.handling || 0,
+        speed: vehicle.speed || 0,
+        pilot: vehicle.pilot || 0,
+        sensor: vehicle.sensor || 0,
+        body: vehicle.body || 0,
+      };
+      vehicles.push(processed);
+    });
+  }
+  return vehicles;
+}
 
 module.exports = { parseCharacter };
