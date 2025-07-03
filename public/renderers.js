@@ -508,12 +508,10 @@ export function renderBioware({ cyberBioWare, sectionContent }) {
     cbSection.className = 'cyber-bio-ware';
     // Render each bioware item
     cyberBioWare.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'cyber-bio-item';
-        itemElement.textContent = item.name;
-        cbSection.appendChild(itemElement);
+        const wareCard = cbSection.appendChild(makeMDUIWaresCard(item));
+        sectionContent.appendChild(wareCard);
     });
-    sectionContent.appendChild(cbSection);
+    return
 }
 
 
