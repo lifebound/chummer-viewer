@@ -20,6 +20,10 @@ var fileName = document.getElementById('fileName');
 // State
 window.appState = {
   characterData: null,
+  currentMainSection: null,
+  currentSubView: null,
+  currentDetailId: null,
+  viewStack: [],
   // selectedTab: 'upload',
   // pendingJobs: [],
   // // ...other state...

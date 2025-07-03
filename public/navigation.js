@@ -58,10 +58,14 @@ export function showTab(key) {
   let sectionContent = document.querySelectorAll('mdui-layout-main')[0];
   console.log('Showing tab:', key);
   sectionContent.innerHTML = '';
-  // tabItems.forEach(item => {
-  //   const tab = Array.from(document.querySelectorAll('#mdTabs md-primary-tab')).find(t => t.getAttribute('label') === item.label);
-  //   if (tab) tab.selected = (item.key === key);
-  // });
+
+  // Reset history stack when switching top-level tabs
+    window.appState.viewStack = [];
+    window.appState.currentMainSection = key;
+    window.appState.currentSubView = null; // No sub-view initially for a new main section
+    window.appState.currentDetailId = null;
+    console.log('[NAV] appState after reset:', window.appState);
+
   if (key === 'upload') {
 
     renderUploadTab(sectionContent);

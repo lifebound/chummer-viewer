@@ -622,8 +622,19 @@ function parseVehicles(character) {
 
       const processedVehicle = {
         guid: vehicle.guid || '', // Unique identifier 
-        name: vehicle.name || '', // Essential for identification 
-        category: vehicle.category || '', // Gives context about the vehicle's role 
+        name: (() => {
+          let vehicleName = vehicle.name || '';
+          // Regex to match a parenthesized size word at the end of the string.
+          // It specifically looks for (Micro), (Mini), (Small), (Medium), (Large), (Huge), (Anthro) followed by optional spaces and the end of the string.
+          const sizeRegex = /\s*\((Micro|Mini|Small|Medium|Large|Huge|Anthro)\)\s*$/i; // 'i' for case-insensitive match
+
+          // If the regex finds a match at the end, replace it with an empty string.
+          if (sizeRegex.test(vehicleName)) {
+              vehicleName = vehicleName.replace(sizeRegex, '');
+          }
+          return vehicleName.trim(); // Trim any remaining whitespace after replacement
+        })(), 
+        category: vehicle.category.replace(":"," -") || '', // Gives context about the vehicle's role 
         handling: vehicle.handling || 0, // Crucial for driving tests 
         offroadhandling: vehicle.offroadhandling || 0, // Important for terrain considerations 
         accel: vehicle.accel || 0, // Acceleration rating 
