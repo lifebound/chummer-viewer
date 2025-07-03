@@ -496,13 +496,11 @@ export function renderCyberware({ cyberBioWare, sectionContent }) {
 
     // Render each cyberware item
     cyberBioWare.forEach(item => {
-        const itemElement = document.createElement('div');
-        itemElement.className = 'cyber-bio-item';
-        itemElement.textContent = item.name;
-        cbSection.appendChild(itemElement);
+       const wareCard = cbSection.appendChild(makeMDUIWaresCard(item));
+       sectionContent.appendChild(wareCard);
     });
+    return;
 
-    sectionContent.appendChild(cbSection);
 }
 export function renderBioware({ cyberBioWare, sectionContent }) {
     console.log('[renderers.js] renderBioware called', cyberBioWare);
@@ -522,8 +520,13 @@ export function renderBioware({ cyberBioWare, sectionContent }) {
 function makeMDUIWaresCard(ware, classsName = 'mdui-card') {
   console.log('[renderers.js] makeMDUIWaresCard called', { ware, classsName });
   const mduiCard = document.createElement('mdui-card');
-  mduiCard.textContent = ware.name;
   mduiCard.className = classsName;
+
+  // Name
+  const nameSpan = document.createElement('span');
+  nameSpan.innerHTML = `<strong>Name:</strong> ${ware.name ?? '—'}`;
+  nameSpan.classList = 'card-title';
+  mduiCard.appendChild(nameSpan);
 
   // Type
   const span1 = document.createElement('span');
@@ -533,7 +536,7 @@ function makeMDUIWaresCard(ware, classsName = 'mdui-card') {
 
   // Rating
   const span2 = document.createElement('span');
-  span2.innerHTML = `<strong>Rating:</strong> ${ware.rating} ?? '—'}`;
+  span2.innerHTML = `<strong>Rating:</strong> ${ware.rating ?? '—'}`;
   span2.classList = 'card-line';
   mduiCard.appendChild(span2);
   
@@ -557,15 +560,21 @@ function makeMDUIWaresCard(ware, classsName = 'mdui-card') {
     mduiCard.appendChild(extra);
   }
   //process bonuses. If there's only one, it won't be an array, so we need to handle that
-  if (ware.bonus) {
-    const bonusDiv = document.createElement('div');
-    bonusDiv.className = 'chummer-card-bonus';
-    if (Array.isArray(ware.bonus)) {
-      bonusDiv.textContent = `Bonuses: ${ware.bonus.map(b => b.name || b).join(', ')}`;
-    } else {
-      bonusDiv.textContent = `Bonus: ${ware.bonus.name || ware.bonus}`;
+  if (ware.bonus && ware.bonus.length > 0) {
+    //if the bonus is a limit modifier, we can ignore handling the bonus here
+    if ((Array.isArray(ware.bonus) && ware.bonus.some(b => b.limitmodifier)) || ware.bonus.limitmodifier) {
+      console.warn('[renderers.js] Bonus contains limit modifiers, skipping display');
     }
-    mduiCard.appendChild(bonusDiv);
+    else{
+      const bonusDiv = document.createElement('div');
+      bonusDiv.className = 'chummer-card-bonus';
+      if (Array.isArray(ware.bonus)) {
+        bonusDiv.textContent = `Bonuses: ${ware.bonus.map(b => b.name || b).join(', ')}`;
+      } else {
+        bonusDiv.textContent = `Bonus: ${ware.bonus.name || ware.bonus}`;
+      }
+      mduiCard.appendChild(bonusDiv);
+    }
   }
   // Source and page (smaller text)
   const src = (ware.source ? String(ware.source) : '').trim();

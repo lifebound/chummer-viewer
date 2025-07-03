@@ -1,5 +1,5 @@
 // characterDisplay.js: Handles rendering of character summary and groups, including all group-specific logic
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors } from './renderers.js';
+import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors, renderCyberware } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
 
@@ -358,6 +358,14 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     });
     sectionContent.appendChild(gradeList);
     return;
+  }
+    if (key.toString().toLowerCase().replace(/\s/g, '') === 'cyberware') {
+    console.log('[characterDisplay.js] Rendering cyberware'); {
+      console.log('[characterDisplay.js] Cyberware data:', characterData[key]);
+    renderCyberware({ cyberBioWare: characterData[key] || [], sectionContent });
+
+    return;
+    }
   }
   // Default: show as JSON
   const keyStr = (typeof key === 'string') ? key : String(key);
