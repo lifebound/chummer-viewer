@@ -640,12 +640,17 @@ function makeMDUIVehicleDroneCard(vehicleData, className = 'mdui-card') {
     // Key Combat/Movement Stats (Summarized)
     const statsContainer = document.createElement('div');
     statsContainer.className = 'vehicle-stats-summary'; // Custom class for styling
-    statsContainer.innerHTML = `
+    let statsHtml = "";
+
+    statsHtml += `
         <p><strong>Body:</strong> ${vehicleData.body} | <strong>Armor:</strong> ${vehicleData.armor} | <strong>Speed:</strong> ${vehicleData.speed}</p>
         <p><strong>Handling:</strong> ${vehicleData.handling} | <strong>Pilot:</strong> ${vehicleData.pilot} | <strong>Sensor:</strong> ${vehicleData.sensor}</p>
-        <p><strong>Weapon Mounts:</strong> ${vehicleData.weaponmounts ? vehicleData.weaponmounts.length : 0}</p>
-        <p><strong>Damage:</strong> P:${vehicleData.physicalcmfilled || 0} | M:${vehicleData.matrixcmfilled || 0}</p>
-    `;
+        <p><strong>Weapon Mounts:</strong> ${vehicleData.weaponmounts ? vehicleData.weaponmounts.length : 0}</p>`;
+        if(vehicleData.seats> 0) {
+            statsHtml += `<p><strong>Seats:</strong> ${vehicleData.seats}</p>`;
+        }
+        statsHtml += `<p><strong>Damage:</strong> P:${vehicleData.physicalcmfilled || 0} | M:${vehicleData.matrixcmfilled || 0}</p>`;
+    statsContainer.innerHTML = statsHtml;
     cardContent.appendChild(statsContainer);
 
     card.appendChild(cardContent); // Append content to the card
@@ -694,7 +699,7 @@ function renderVehicleDetail(vehicleGuid) {
         sectionContent.textContent = "Vehicle not found.";
         return;
     }
-
+    console.log('[VEHICLES] Vehicle data:', vehicle);
     appState.currentSubView = 'vehicleDetail';
     appState.currentDetailId = vehicleGuid;
     console.log('[VEHICLES] Updated appState:', appState);
@@ -719,47 +724,49 @@ function renderVehicleDetail(vehicleGuid) {
             </div>
     `;
     sectionContent.appendChild(basicInfoCard);
-
-    // --- Weapon Mounts Section (using mdui-expansion-panel) ---
+    const mainCollapsesContainer = document.createElement('mdui-collapse');
+   // --- Weapon Mounts Section (using mdui-collapse and mdui-collapse-item) ---
     if (vehicle.weaponmounts && vehicle.weaponmounts.length > 0) {
-        const weaponMountsExpansionPanel = document.createElement('mdui-expansion-panel');
-        weaponMountsExpansionPanel.className = 'vehicle-detail-section'; // Custom class
+        
+        const weaponMountsOuterCollapseItem = document.createElement('mdui-collapse-item');
 
-        const header = document.createElement('div');
-        header.slot = 'header';
-        header.textContent = `Weapon Mounts (${vehicle.weaponmounts.length} total)`;
-        weaponMountsExpansionPanel.appendChild(header);
+        // Header for the "Weapon Mounts" section
+        const mountsHeader = document.createElement('mdui-list-item');
+        mountsHeader.setAttribute('slot', 'header');
+        mountsHeader.setAttribute('icon', 'add'); // Or whatever default icon mdui-collapse-item manages
+        mountsHeader.textContent = `Weapon Mounts (${vehicle.weaponmounts.length} total)`;
+        weaponMountsOuterCollapseItem.appendChild(mountsHeader);
 
-        const content = document.createElement('div');
-        content.slot = 'content';
+        // Content for the "Weapon Mounts" section (This is what collapses/expands for the main mounts header)
+        const mountsContentDiv = document.createElement('div');
+        mountsContentDiv.style.marginLeft = '1rem'; // Indent content as per mdui example
         
         vehicle.weaponmounts.forEach(mount => {
-            const mountCard = document.createElement('mdui-card');
-            mountCard.className = 'weapon-mount-card';
-            mountCard.innerHTML = `
+            // Each mount will now be a distinct card or a simple div within the main mounts content
+            const mountItemCard = document.createElement('mdui-card'); // Using a card for each mount for better visual separation
+            mountItemCard.className = 'weapon-mount-item-card';
+            mountItemCard.style.marginTop = '10px';
+            mountItemCard.style.marginBottom = '10px';
+
+            mountItemCard.innerHTML = `
                 <div class="mdui-card-content">
-                    <h4 class="mdui-card-title">Mount: ${mount.name} (${mount.category})</h4>
+                    <h4 class="mdui-card-title">${mount.name} (${mount.category})</h4>
                     <p><strong>Slots:</strong> ${mount.slots} | <strong>Capacity:</strong> ${mount.weaponcapacity}</p>
                     <p><strong>Avail:</strong> ${mount.avail} | <strong>Cost:</strong> ${mount.cost}¥</p>
-                    <p><strong>Categories:</strong> ${mount.weaponmountcategories}</p>
+                    <!--<p><strong>Categories:</strong> ${mount.weaponmountcategories}</p>-->
                     <p><strong>Source:</strong> ${mount.source}</p>
                 </div>
             `;
-            content.appendChild(mountCard);
 
-            // Mounted Weapon (if any) - Nest another card/expansion or just detail
+            // --- Display Mounted Weapon Details Directly (if a weapon is present) ---
             if (mount.weapon) {
-                const weaponExpansionPanel = document.createElement('mdui-expansion-panel'); // Nested expansion
-                weaponExpansionPanel.className = 'weapon-detail-section';
-
-                const weaponHeader = document.createElement('div');
-                weaponHeader.slot = 'header';
-                weaponHeader.textContent = `Weapon: ${mount.weapon.name} (${mount.weapon.category})`;
-                weaponExpansionPanel.appendChild(weaponHeader);
-
                 const weaponContent = document.createElement('div');
-                weaponContent.slot = 'content';
-                weaponContent.innerHTML = `
+                weaponContent.className = 'mounted-weapon-details';
+                weaponContent.style.padding = '10px 16px';
+                weaponContent.style.borderTop = '1px solid var(--mdui-color-outline-variant)';
+
+                weaponContent.innerHTML += `
+                    <h5>Attached Weapon: ${mount.weapon.name} (${mount.weapon.category})</h5>
                     <p><strong>Damage:</strong> ${mount.weapon.damage} | <strong>AP:</strong> ${mount.weapon.ap} | <strong>Mode:</strong> ${mount.weapon.mode}</p>
                     <p><strong>RC:</strong> ${mount.weapon.rc} | <strong>Ammo:</strong> ${mount.weapon.ammo}</p>
                     <p><strong>Accuracy:</strong> ${mount.weapon.accuracy} | <strong>Conceal:</strong> ${mount.weapon.conceal}</p>
@@ -767,114 +774,123 @@ function renderVehicleDetail(vehicleGuid) {
                     <p><strong>Source:</strong> ${mount.weapon.source}</p>
                     <p><strong>Equipped:</strong> ${mount.weapon.equipped ? 'Yes' : 'No'}</p>
                 `;
-                weaponExpansionPanel.appendChild(weaponContent);
+                mountItemCard.appendChild(weaponContent); // Append weapon details directly to the mount card
 
-                // Weapon Accessories (nested further)
+                // Weapon Accessories (now a simple mdui-list if accessories are present, NO COLLAPSE-ITEM)
                 if (mount.weapon.accessories && mount.weapon.accessories.length > 0) {
-                    const accessoriesList = document.createElement('ul'); // Simple list for accessories
-                    accessoriesList.className = 'weapon-accessories-list';
-                    const listHeader = document.createElement('h5');
-                    listHeader.textContent = 'Accessories:';
-                    accessoriesList.appendChild(listHeader);
-
+                    const accessoriesList = document.createElement('mdui-list');
+                    accessoriesList.innerHTML = `<h6 style="margin-left: 16px;">Accessories:</h6>`; // Sub-heading for accessories
+                    
                     mount.weapon.accessories.forEach(accessory => {
-                        const accessoryItem = document.createElement('li');
-                        accessoryItem.innerHTML = `
+                        const accessoryListItem = document.createElement('mdui-list-item');
+                        accessoryListItem.innerHTML = `
                             <strong>${accessory.name}</strong> (Mount: ${accessory.mount})<br>
                             RC: ${accessory.rc} | Acc: ${accessory.accuracy} | Avail: ${accessory.avail} | Cost: ${accessory.cost}¥<br>
                             Source: ${accessory.source} | Equipped: ${accessory.equipped ? 'Yes' : 'No'}
                         `;
-                        // Accessory Gears (deepest level)
+                        // Accessory Gears (now a simple mdui-list if gears are present, NO COLLAPSE-ITEM)
                         if (accessory.gears && accessory.gears.length > 0) {
-                            const gearList = document.createElement('ul');
-                            gearList.className = 'accessory-gear-list';
-                            const gearListHeader = document.createElement('h6');
-                            gearListHeader.textContent = 'Gears:';
-                            gearList.appendChild(gearListHeader);
-
-                            accessory.gears.forEach(gear => {
-                                const gearItem = document.createElement('li');
-                                gearItem.innerHTML = `
-                                    ${gear.name} (${gear.category})<br>
-                                    Cap: ${gear.capacity} | Qty: ${gear.qty} | Avail: ${gear.avail} | Cost: ${gear.cost}¥<br>
-                                    Source: ${gear.source} | Equipped: ${gear.equipped ? 'Yes' : 'No'}
-                                `;
-                                gearList.appendChild(gearItem);
-                            });
-                            accessoryItem.appendChild(gearList);
+                             const gearContentDiv = document.createElement('div');
+                             gearContentDiv.style.marginLeft = '1rem';
+                             const gearList = document.createElement('mdui-list');
+                             gearList.innerHTML = `<h6 style="margin-left: 16px;">Gears:</h6>`; // Sub-heading for gears
+                             
+                             accessory.gears.forEach(gear => {
+                                 const gearListItem = document.createElement('mdui-list-item');
+                                 gearListItem.innerHTML = `
+                                     ${gear.name} (${gear.category})<br>
+                                     Cap: ${gear.capacity} | Qty: ${gear.qty} | Avail: ${gear.avail} | Cost: ${gear.cost}¥<br>
+                                     Source: ${gear.source} | Equipped: ${gear.equipped ? 'Yes' : 'No'}
+                                 `;
+                                 gearList.appendChild(gearListItem);
+                             });
+                             gearContentDiv.appendChild(gearList);
+                             accessoryListItem.appendChild(gearContentDiv); // Append gear list to accessory list item
                         }
-                        accessoriesList.appendChild(accessoryItem);
+                        accessoriesList.appendChild(accessoryListItem);
                     });
-                    weaponContent.appendChild(accessoriesList);
+                    weaponContent.appendChild(accessoriesList); // Append accessories list to weapon content
                 }
-                weaponExpansionPanel.appendChild(weaponContent);
-                mountCard.appendChild(weaponExpansionPanel); // Append nested expansion to mount card
             }
 
-            // Weapon Mount Options
+            // Weapon Mount Options (still part of the mount's details)
             if (mount.weaponmountoptions && mount.weaponmountoptions.length > 0) {
-                const mountOptionsList = document.createElement('ul');
-                mountOptionsList.className = 'mount-options-list';
-                const listHeader = document.createElement('h5');
-                listHeader.textContent = 'Mount Options:';
-                mountOptionsList.appendChild(listHeader);
-
+                const mountOptionsList = document.createElement('mdui-list');
+                mountOptionsList.innerHTML = `<h6 style="margin-left: 16px;">Mount Options:</h6>`;
+                
                 mount.weaponmountoptions.forEach(option => {
-                    const optionItem = document.createElement('li');
-                    optionItem.textContent = `${option.name} (${option.category}) - Slots: ${option.slots}, Cost: ${option.cost}¥`;
-                    mountOptionsList.appendChild(optionItem);
+                    const optionListItem = document.createElement('mdui-list-item');
+                    optionListItem.textContent = `${option.name} (Slots: ${option.slots}, Cost: ${option.cost}¥)`;
+                    mountOptionsList.appendChild(optionListItem);
                 });
-                mountCard.appendChild(mountOptionsList);
+                mountItemCard.appendChild(mountOptionsList); // Append options to the mount card
             }
-
-            // You might want to wrap mountCard in its own expansion panel if it gets too long
-            content.appendChild(mountCard);
+            
+            mountsContentDiv.appendChild(mountItemCard); // Append each mount card to the main mounts content div
         });
-        sectionContent.appendChild(weaponMountsExpansionPanel);
+        
+        weaponMountsOuterCollapseItem.appendChild(mountsContentDiv);
+        
+        
+        mainCollapsesContainer.appendChild(weaponMountsOuterCollapseItem);
+        sectionContent.appendChild(mainCollapsesContainer);
     }
 
-    // --- Sensor Array Section (if present) ---
-    if (vehicle.gears && vehicle.gears.name === "Sensor Array") { // Check specifically for the main Sensor Array gear
-        const sensorExpansionPanel = document.createElement('mdui-expansion-panel');
-        sensorExpansionPanel.className = 'vehicle-detail-section';
+    // --- Sensor Array Section (if present, using mdui-collapse-item) ---
+    // This section structure remains the same as it's a top-level collapse item
+    const sensorArrayGear = vehicle.gears && Array.isArray(vehicle.gears) ? vehicle.gears.find(g => g.name === "Sensor Array") : null;
+    if (sensorArrayGear) {
+        const sensorCollapseItem = document.createElement('mdui-collapse-item');
 
-        const header = document.createElement('div');
-        header.slot = 'header';
-        header.textContent = `Sensor Array (Rating ${vehicle.gears.rating})`;
-        sensorExpansionPanel.appendChild(header);
+        const sensorHeader = document.createElement('mdui-list-item');
+        sensorHeader.setAttribute('slot', 'header');
+        sensorHeader.setAttribute('icon', 'add');
+        sensorHeader.textContent = `Sensor Array (Rating ${sensorArrayGear.rating || 'N/A'})`;
+        sensorCollapseItem.appendChild(sensorHeader);
 
-        const content = document.createElement('div');
-        content.slot = 'content';
-        const sensor = vehicle.gears; // The parsed sensor gear object
-        content.innerHTML = `
-            <p><strong>Capacity:</strong> ${sensor.capacity} | <strong>Min Rating:</strong> ${sensor.minrating} | <strong>Max Rating:</strong> ${sensor.maxrating}</p>
-            <p><strong>Avail:</strong> ${sensor.avail} | <strong>Cost:</strong> ${sensor.cost}¥</p>
-            <p><strong>Source:</strong> ${sensor.source}</p>
+        const sensorContentDiv = document.createElement('div');
+        sensorContentDiv.style.marginLeft = '1rem';
+        sensorContentDiv.innerHTML = `
+            <p><strong>Capacity:</strong> ${sensorArrayGear.capacity} | <strong>Min Rating:</strong> ${sensorArrayGear.minrating} | <strong>Max Rating:</strong> ${sensorArrayGear.maxrating}</p>
+            <p><strong>Avail:</strong> ${sensorArrayGear.avail} | <strong>Cost:</strong> ${sensorArrayGear.cost}¥</p>
+            <p><strong>Source:</strong> ${sensorArrayGear.source}</p>
         `;
-        sensorExpansionPanel.appendChild(content);
-        sectionContent.appendChild(sensorExpansionPanel);
+        sensorCollapseItem.appendChild(sensorContentDiv);
+        
+        if (mainCollapsesContainer) {
+            mainCollapsesContainer.appendChild(sensorCollapseItem);
+        } else {
+            sectionContent.appendChild(sensorCollapseItem);
+        }
     }
 
-    // --- Modifications Section (if present, using a simple expansion panel placeholder) ---
+    // --- Modifications Section (if present, using mdui-collapse-item) ---
+    // This section structure also remains the same as it's a top-level collapse item
     if (vehicle.mods && vehicle.mods.length > 0) {
-        const modsExpansionPanel = document.createElement('mdui-expansion-panel');
-        modsExpansionPanel.className = 'vehicle-detail-section';
+        const modsCollapseItem = document.createElement('mdui-collapse-item');
 
-        const header = document.createElement('div');
-        header.slot = 'header';
-        header.textContent = `Modifications (${vehicle.mods.length} total)`;
-        modsExpansionPanel.appendChild(header);
+        const modsHeader = document.createElement('mdui-list-item');
+        modsHeader.setAttribute('slot', 'header');
+        modsHeader.setAttribute('icon', 'add');
+        modsHeader.textContent = `Modifications (${vehicle.mods.length} total)`;
+        modsCollapseItem.appendChild(modsHeader);
 
-        const content = document.createElement('div');
-        content.slot = 'content';
-        // You'd iterate through vehicle.mods here and display their details
+        const modsContentDiv = document.createElement('div');
+        modsContentDiv.style.marginLeft = '1rem';
+        const modsList = document.createElement('mdui-list');
         vehicle.mods.forEach(mod => {
-            const modItem = document.createElement('p');
-            modItem.textContent = `${mod.name} (Category: ${mod.category || 'N/A'}) - Cost: ${mod.cost || 'N/A'}`; // Adjust based on mod structure
-            content.appendChild(modItem);
+            const modListItem = document.createElement('mdui-list-item');
+            modListItem.textContent = `${mod.name} (Category: ${mod.category || 'N/A'}) - Cost: ${mod.cost || 'N/A'}`;
+            modsList.appendChild(modListItem);
         });
-        modsExpansionPanel.appendChild(content);
-        sectionContent.appendChild(modsExpansionPanel);
+        modsContentDiv.appendChild(modsList);
+        modsCollapseItem.appendChild(modsContentDiv);
+        
+        if (mainCollapsesContainer) {
+            mainCollapsesContainer.appendChild(modsCollapseItem);
+        } else {
+            sectionContent.appendChild(modsCollapseItem);
+        }
     }
 
     // Optional: Add a "Back to List" button at the bottom of the details
@@ -883,11 +899,12 @@ function renderVehicleDetail(vehicleGuid) {
     backButtonContainer.style.padding = '20px';
     const backButton = document.createElement('mdui-button');
     backButton.textContent = 'Back to Vehicle List';
-    backButton.className = 'mdui-filled-button'; // A more prominent button
+    backButton.className = 'mdui-filled-button';
     backButton.addEventListener('click', goBack);
     backButtonContainer.appendChild(backButton);
     sectionContent.appendChild(backButtonContainer);
 }
+
 
 function goBack() {
     console.log('[NAV] goBack called', window.appState);
