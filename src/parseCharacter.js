@@ -2,6 +2,7 @@ const skillGroupMap = require('./skillGroupMap');
 const { extractLimitModifiersFromBonus } = require('./limitConditionMap');
 const skillAttributeMap = require('./skillAttributeMap');
 const winston = require('winston');
+const { parse } = require('uuid');
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -494,7 +495,9 @@ function parseCharacter(json) {
     }
     return allGear;
   }
-
+  const vehicles = parseVehicles(character);
+  result.vehicles = vehicles;
+  logger.debug(`[PARSE-CHARACTER] Processed vehicles: ${JSON.stringify(vehicles)}`);
   const attributesMap = extractAttributesMap(filteredAttributes);
   result.gear = collectAllGear(character, attributesMap);
 
@@ -571,12 +574,12 @@ function extractInitiationMetaMagic(character, result) {
 
 
 function processCyberwareBioware(character) {
-    logger.info('[PARSE-CHARACTER] processCyberwareBioware called');
-    const cyberware = [];
-    const bioware = [];
-    // New unified extraction from character.cyberware.cyberwares
-    logger.verbose(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
-    if (character.cyberwares && character.cyberwares.cyberware) {
+  logger.info('[PARSE-CHARACTER] processCyberwareBioware called');
+  const cyberware = [];
+  const bioware = [];
+  // New unified extraction from character.cyberware.cyberwares
+  logger.verbose(`[PARSE-CHARACTER] Extracting cyberware/bioware from character: ${JSON.stringify(character.cyberwares.cyberware)}`);
+  if (character.cyberwares && character.cyberwares.cyberware) {
       const wareList = Array.isArray(character.cyberwares.cyberware)
         ? character.cyberwares.cyberware
         : [character.cyberwares.cyberware];
@@ -599,9 +602,189 @@ function processCyberwareBioware(character) {
           cyberware.push(processed);
         }
       });
-    }
-    return {bioware, cyberware};
-    
   }
+  return {bioware, cyberware};
+    
+}
+
+// function to handle parsing vehicles
+function parseVehicles(character) {
+  logger.info('[PARSE-CHARACTER] parseVehicles called');
+  const vehicles = [];
+
+  if (character.vehicles && character.vehicles.vehicle) {
+    const vehicleList = Array.isArray(character.vehicles.vehicle)
+      ? character.vehicles.vehicle
+      : [character.vehicles.vehicle];
+
+    vehicleList.forEach(vehicle => {
+      logger.debug(`[PARSE-CHARACTER] Processing vehicle: ${JSON.stringify(vehicle)}`);
+
+      const processedVehicle = {
+        guid: vehicle.guid || '', // Unique identifier 
+        name: (() => {
+          let vehicleName = vehicle.name || '';
+          // Regex to match a parenthesized size word at the end of the string.
+          // It specifically looks for (Micro), (Mini), (Small), (Medium), (Large), (Huge), (Anthro) followed by optional spaces and the end of the string.
+          const sizeRegex = /\s*\((Micro|Mini|Small|Medium|Large|Huge|Anthro)\)\s*$/i; // 'i' for case-insensitive match
+
+          // If the regex finds a match at the end, replace it with an empty string.
+          if (sizeRegex.test(vehicleName)) {
+              vehicleName = vehicleName.replace(sizeRegex, '');
+          }
+          return vehicleName.trim(); // Trim any remaining whitespace after replacement
+        })(), 
+        category: vehicle.category.replace(":"," -") || '', // Gives context about the vehicle's role 
+        handling: vehicle.handling || 0, // Crucial for driving tests 
+        offroadhandling: vehicle.offroadhandling || 0, // Important for terrain considerations 
+        accel: vehicle.accel || 0, // Acceleration rating 
+        offroadaccel: vehicle.offroadaccel || 0, // Off-road acceleration 
+        speed: vehicle.speed || 0, // Top speed 
+        offroadspeed: vehicle.offroadspeed || 0, // Off-road top speed 
+        pilot: vehicle.pilot || 0, // Autosoft or Pilot program rating 
+        body: vehicle.body || 0, // Vehicle structure and damage capacity 
+        seats: vehicle.seats || 0, // Passenger capacity 
+        armor: vehicle.armor || 0, // Damage reduction 
+        sensor: vehicle.sensor || 0, // Sensor rating 
+        devicerating: Array.isArray(vehicle.devicerating) && vehicle.devicerating.length > 0
+            ? vehicle.devicerating[0] // Device Rating for Matrix actions 
+            : null, // Changed to null as we only want the first number here.
+        avail: vehicle.avail || '', // Availability for procurement/replacement 
+        cost: vehicle.cost || 0, // Purchase cost 
+        modslots: vehicle.modslots || 0, // Total modification slots available 
+        physicalcmfilled: vehicle.physicalcmfilled || 0, // Current physical condition monitor boxes filled 
+        matrixcmfilled: vehicle.matrixcmfilled || 0, // Current matrix condition monitor boxes filled 
+        source: vehicle.source && vehicle.page ? `${vehicle.source} ${vehicle.page}` : '', // Sourcebook and page 
+        
+        // Process Weapon Mounts (deeply nested structure)
+        weaponmounts: vehicle.weaponmounts && vehicle.weaponmounts.weaponmount
+          ? (Array.isArray(vehicle.weaponmounts.weaponmount)
+              ? vehicle.weaponmounts.weaponmount
+              : [vehicle.weaponmounts.weaponmount]
+            ).map(mount => ({
+              guid: mount.guid || '', // Unique identifier 
+              name: mount.name || '', // Type/size of mount 
+              category: mount.category || '', // Category of mount 
+              slots: mount.slots || 0, // Mount's slot cost 
+              avail: mount.avail || '', 
+              cost: mount.cost || 0, 
+              weaponmountcategories: mount.weaponmountcategories || '', // List of weapon categories 
+              weaponcapacity: mount.weaponcapacity || 0, // Number of weapons this mount can hold 
+              source: mount.source && mount.page ? `${mount.source} ${mount.page}` : '', 
+              
+              // Process Mounted Weapon (singular 'weapon' object under 'weapons')
+              weapon: mount.weapons && mount.weapons.weapon
+                ? (() => { // Use IIFE for conditional processing
+                    const weapon = mount.weapons.weapon; // 
+                    return {
+                      guid: weapon.guid || '', 
+                      name: weapon.name || '', 
+                      category: weapon.category || '', 
+                      damage: weapon.damage || '', 
+                      ap: weapon.ap || 0, 
+                      mode: weapon.mode || '', 
+                      rc: weapon.rc || 0, 
+                      ammo: weapon.ammo || '', 
+                      accuracy: Array.isArray(weapon.accuracy) && weapon.accuracy.length > 0
+                        ? weapon.accuracy[0] : 0,  // Assuming accuracy is a single number from the array
+                      conceal: weapon.conceal || 0, 
+                      avail: weapon.avail || '', 
+                      cost: weapon.cost || 0, 
+                      source: weapon.source && weapon.page ? `${weapon.source} ${weapon.page}` : '', 
+                      included: weapon.included === 'True', 
+                      equipped: weapon.equipped === 'True', 
+
+                      // Process Weapon Accessories
+                      accessories: weapon.accessories && weapon.accessories.accessory
+                        ? (Array.isArray(weapon.accessories.accessory)
+                            ? weapon.accessories.accessory
+                            : [weapon.accessories.accessory]
+                          ).map(accessory => ({
+                            guid: accessory.guid || '', 
+                            name: accessory.name || '', 
+                            mount: accessory.mount || '', 
+                            rc: accessory.rc || 0, 
+                            accuracy: accessory.accuracy || 0, 
+                            avail: accessory.avail || '', 
+                            cost: accessory.cost || '',  // Cost can be "Weapon Cost" string
+                            source: accessory.source && accessory.page ? `${accessory.source} ${accessory.page}` : '', 
+                            included: accessory.included === 'True', 
+                            equipped: accessory.equipped === 'True', 
+
+                            // Process Accessory Gears (nested within accessories)
+                            gears: accessory.gears && accessory.gears.gear
+                              ? (Array.isArray(accessory.gears.gear)
+                                  ? accessory.gears.gear
+                                  : [accessory.gears.gear]
+                                ).map(gear => ({
+                                  guid: gear.guid || '', 
+                                  name: gear.name || '', 
+                                  category: gear.category || '', 
+                                  capacity: gear.capacity || '', 
+                                  qty: gear.qty || 0, 
+                                  avail: gear.avail || 0, 
+                                  cost: gear.cost || 0, 
+                                  source: gear.source && gear.page ? `${gear.source} ${gear.page}` : '', 
+                                  equipped: gear.equipped === 'True', 
+                                }))
+                              : [] // No gears for this accessory
+                          }))
+                        : [] // No accessories for this weapon
+                    };
+                  })()
+                : null, // No weapon mounted
+              
+              // Process Weapon Mount Options (newly added structure)
+              weaponmountoptions: mount.weaponmountoptions && mount.weaponmountoptions.weaponmountoption
+              ? (Array.isArray(mount.weaponmountoptions.weaponmountoption)
+                ? mount.weaponmountoptions.weaponmountoption
+                : [mount.weaponmountoptions.weaponmountoption]
+              ).map(option => ({
+                guid: option.guid || '', 
+                name: option.name || '', 
+                category: option.category || '', 
+                slots: option.slots || 0, 
+                avail: option.avail || 0, 
+                cost: option.cost || 0, 
+                includedinparent: option.includedinparent === 'True', 
+              }))
+              : [], // No options for this mount
+
+            }))
+          : [], // No weapon mounts
+
+        // Process Sensor Array (singular 'gear' object under 'gears')
+        gears: vehicle.gears && vehicle.gears.gear
+          ? (() => { // Use IIFE for conditional processing
+              const sensorGear = vehicle.gears.gear; // 
+              return {
+                guid: sensorGear.guid || '', 
+                name: sensorGear.name || '', 
+                category: sensorGear.category || '', 
+                capacity: sensorGear.capacity || '', 
+                minrating: sensorGear.minrating || 0, 
+                maxrating: sensorGear.maxrating || 0, 
+                rating: sensorGear.rating || 0, 
+                avail: sensorGear.avail || 0, 
+                cost: sensorGear.cost || 0, 
+                source: sensorGear.source && sensorGear.page ? `${sensorGear.source} ${sensorGear.page}` : '', 
+                equipped: sensorGear.equipped === 'True', 
+              };
+            })()
+          : null, // No sensor array
+          
+        // Mods can be null, or have .mod, which can be an array or a single object. If it's null, we omit it.
+        // Assuming 'mods' structure is simple, if it gets complex, you'd apply the same deep parsing.
+        mods: vehicle.mods && vehicle.mods.mod
+          ? Array.isArray(vehicle.mods.mod)
+            ? vehicle.mods.mod
+            : [vehicle.mods.mod]
+          : [],
+      };
+      vehicles.push(processedVehicle);
+    });
+  }
+  return vehicles;
+}
 
 module.exports = { parseCharacter };

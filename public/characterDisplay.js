@@ -1,5 +1,5 @@
 // characterDisplay.js: Handles rendering of character summary and groups, including all group-specific logic
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors, renderCyberware,renderBioware } from './renderers.js';
+import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors, renderCyberware,renderBioware,renderVehiclesAndDrones } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
 
@@ -372,6 +372,13 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     console.log('[characterDisplay.js] Rendering bioware');
     console.log('[characterDisplay.js] Bioware data:', characterData[key]);
     renderBioware({ cyberBioWare: characterData[key] || [], sectionContent });
+    return;
+  }
+  // Handle vehicles and drones
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'vehicles') {
+    console.log('[characterDisplay.js] Rendering vehicles and drones');
+    const vehiclesAndDrones = characterData[key] || [];
+    renderVehiclesAndDrones({ vehiclesAndDrones, sectionContent });
     return;
   }
   // Default: show as JSON
