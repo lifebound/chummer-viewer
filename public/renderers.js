@@ -1,5 +1,6 @@
 // renderers.js: Custom renderers for spells, complex forms, etc.
 // Export functions like renderSpells, renderComplexForms, etc.
+import {getProcessedCritterData} from './critterHelper.js'; // Import critter helper for critter rendering
 
 console.log('[renderers.js] Loaded');
 const getLayoutMainElement = () => document.querySelector('mdui-layout-main');
@@ -21,18 +22,34 @@ function makeCollapsible(container, nameNode, contentNodes) {
 }
 function makeMDUICritterCard(nameNode,bindingTerm,forceTerm,ServiceTerm,classsName = 'mdui-card') {
   console.log('[renderers.js] makeMDUICard called', { nameNode, bindingTerm });
+  let critterModel = getProcessedCritterData(nameNode.name,nameNode.force);
+  console.log('[renderers.js] makeMDUICritterCard processed critter data:', critterModel);
   // Hide all content nodes initially (collapsed)
   let mduiCard = document.createElement('mdui-card');
-  let mduiSwitch = document.createElement('md-switch');
-  mduiSwitch.title = bindingTerm;
-  mduiCard.textContent = nameNode.name;
-  mduiCard.className = classsName
+  // Card Content Container
+  const cardContent = document.createElement('div');
+  cardContent.className = 'mdui-card-content'; // A common class for card content areas
+  console.log('[renderers.js] makeMDUICritterCard nameNode:', nameNode);
+  //critter name (Headline)
+  const headline = document.createElement('h3'); // Using h3 for a prominent title
+  headline.className = 'mdui-card-title'; // Apply mdui-card-title class if it exists for styling
+  headline.textContent = nameNode.crittername || nameNode.name;
+  cardContent.appendChild(headline);
+  mduiCard.appendChild(cardContent); // Append content to the card
 
-  //mduiCard.appendChild(mduiSwitch);
-  // let span1 = document.createElement('span');
-  // span1.innerHTML = `<strong>Type:</strong> ${nameNode.type ?? '—'}`;
-  // span1.classList = 'card-line';
-  // mduiCard.appendChild(span1);
+  console.log('[renderers.js] makeMDUICritterCard bindingTerm:', bindingTerm);
+  const mduiSwitch = document.createElement('mdui-switch');
+  mduiSwitch.title = bindingTerm;
+  mduiSwitch.checked = nameNode.bound ?? false; // Default to false if binding is not defined
+  // mduiCard.textContent = nameNode.name;
+
+  mduiCard.appendChild(mduiSwitch);
+  console.log('[renderers.js] makeMDUICritterCard forceTerm:', forceTerm);
+  
+  // // let span1 = document.createElement('span');
+  // // span1.innerHTML = `<strong>Type:</strong> ${nameNode.type ?? '—'}`;
+  // // span1.classList = 'card-line';
+  // // mduiCard.appendChild(span1);
   let span2 = document.createElement('span');
   span2.innerHTML = `<strong>${forceTerm}:</strong> ${nameNode.force ?? '—'}`;
   span2.classList = 'card-line';
@@ -41,7 +58,111 @@ function makeMDUICritterCard(nameNode,bindingTerm,forceTerm,ServiceTerm,classsNa
   span3.innerHTML = `<strong>${ServiceTerm}:</strong> ${nameNode.services ?? '—'}`;
   span3.classList = 'card-line';
   mduiCard.appendChild(span3);
+  // --- START: New section for Skills and Powers, wrapped in try-catch ---
+  try {
+    if (critterModel) {
+      const detailsContainer = document.createElement('div');
+      detailsContainer.className = 'mdui-card-content-details'; // A new container for organized details
+
+      // Display Initiative (if available)
+      if (critterModel.initiativeDicePool && critterModel.initiativeDicePool !== 'N/A') {
+        const initiativeSpan = document.createElement('span');
+        initiativeSpan.innerHTML = `<strong>${critterModel.initiativeType} Initiative:</strong> ${critterModel.initiativeDicePool}`;
+        initiativeSpan.classList.add('card-line');
+        detailsContainer.appendChild(initiativeSpan);
+      }
+
+      // // Display Attributes (if available)
+      // if (critterModel.attributes && Object.keys(critterModel.attributes).length > 0) {
+      //   const attributesTitle = document.createElement('h5');
+      //   attributesTitle.textContent = 'Attributes';
+      //   detailsContainer.appendChild(attributesTitle);
+        
+      //   const attributesList = document.createElement('ul');
+      //   attributesList.classList.add('critter-attributes-list'); // Custom class for styling
+      //   for (const attr in critterModel.attributes) {
+      //     if (critterModel.attributes.hasOwnProperty(attr)) {
+      //       const attrItem = document.createElement('li');
+      //       attrItem.innerHTML = `<strong>${attr}:</strong> ${critterModel.attributes[attr]}`;
+      //       attributesList.appendChild(attrItem);
+      //     }
+      //   }
+      //   detailsContainer.appendChild(attributesList);
+      // }
+
+      // Display Skills
+      if (critterModel.skills && Object.keys(critterModel.skills).length > 0) {
+        const skillsTitle = document.createElement('h5');
+        skillsTitle.textContent = 'Skills';
+        detailsContainer.appendChild(skillsTitle);
+
+        const skillsList = document.createElement('ul');
+        skillsList.classList.add('critter-skills-list'); // Custom class for styling
+        for (const skillName in critterModel.skills) {
+          if (critterModel.skills.hasOwnProperty(skillName)) {
+            const skillItem = document.createElement('li');
+            skillItem.innerHTML = `<strong>${skillName}:</strong> ${critterModel.skills[skillName]}`;
+            skillsList.appendChild(skillItem);
+          }
+        }
+        detailsContainer.appendChild(skillsList);
+      }
+
+      // Display Powers
+      if (critterModel.powers && critterModel.powers.length > 0) {
+        const powersTitle = document.createElement('h5');
+        powersTitle.textContent = 'Powers';
+        detailsContainer.appendChild(powersTitle);
+
+        const powersList = document.createElement('ul');
+        powersList.classList.add('critter-powers-list'); // Custom class for styling
+        critterModel.powers.forEach(power => {
+          const powerItem = document.createElement('li');
+          powerItem.textContent = power;
+          powersList.appendChild(powerItem);
+        });
+        detailsContainer.appendChild(powersList);
+      }
+
+      // // Display Optional Powers
+      // if (critterModel.optionalPowers && critterModel.optionalPowers.length > 0) {
+      //   const optionalPowersTitle = document.createElement('h5');
+      //   optionalPowersTitle.textContent = 'Optional Powers';
+      //   detailsContainer.appendChild(optionalPowersTitle);
+
+      //   const optionalPowersList = document.createElement('ul');
+      //   optionalPowersList.classList.add('critter-optional-powers-list'); // Custom class
+      //   critterModel.optionalPowers.forEach(power => {
+      //     const powerItem = document.createElement('li');
+      //     powerItem.textContent = power;
+      //     optionalPowersList.appendChild(powerItem);
+      //   });
+      //   detailsContainer.appendChild(optionalPowersList);
+      // }
+
+      // Display Special
+      if (critterModel.special) {
+        const specialTitle = document.createElement('h5');
+        specialTitle.textContent = 'Special';
+        detailsContainer.appendChild(specialTitle);
+
+        const specialText = document.createElement('p');
+        specialText.classList.add('critter-special-text'); // Custom class
+        specialText.textContent = critterModel.special;
+        detailsContainer.appendChild(specialText);
+      }
+
+      // Append the whole details container to the card
+      mduiCard.appendChild(detailsContainer);
+    }
+  } catch (error) {
+    console.error('[renderers.js] Error adding critter details to card:', error);
+    // The try-catch block gracefully handles the error,
+    // and the function will proceed to return the card as normal without these details.
+  }
+  // --- END: New section for Skills and Powers ---
   mduiCard.clickable = true;
+  mduiCard.className = classsName
   return mduiCard;
   // Add MDUi card styles
 }
