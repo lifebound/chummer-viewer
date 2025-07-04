@@ -1,5 +1,5 @@
 // characterDisplay.js: Handles rendering of character summary and groups, including all group-specific logic
-import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors, renderCyberware,renderBioware,renderVehiclesAndDrones } from './renderers.js';
+import { renderSpells, renderComplexForms, renderSpirits, renderSprites, renderGear, renderConditionMonitors, renderCyberware,renderBioware,renderVehiclesAndDrones, renderAdeptPowers } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
 
@@ -359,7 +359,7 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     sectionContent.appendChild(gradeList);
     return;
   }
-    if (key.toString().toLowerCase().replace(/\s/g, '') === 'cyberware') {
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'cyberware') {
     console.log('[characterDisplay.js] Rendering cyberware'); {
       console.log('[characterDisplay.js] Cyberware data:', characterData[key]);
     renderCyberware({ cyberBioWare: characterData[key] || [], sectionContent });
@@ -379,6 +379,11 @@ export function renderCharacterTab(sectionContent, key, characterData, pendingJo
     console.log('[characterDisplay.js] Rendering vehicles and drones');
     const vehiclesAndDrones = characterData[key] || [];
     renderVehiclesAndDrones({ vehiclesAndDrones, sectionContent });
+    return;
+  }
+  if (key.toString().toLowerCase().replace(/\s/g, '') === 'adeptpowers') {
+    console.log('[characterDisplay.js] Rendering powers');
+    renderAdeptPowers({ adeptPowers: characterData[key] || [], sectionContent });
     return;
   }
   // Default: show as JSON
