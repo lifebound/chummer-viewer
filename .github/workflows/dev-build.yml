@@ -1,0 +1,43 @@
+name: Build and Push Dev Image
+
+on:
+  push:
+    branches:
+      - develop # Trigger on pushes to the 'develop' branch
+
+jobs:
+  build-dev-image:
+    runs-on: ubuntu-latest # Or your preferred runner
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Use your Node.js version
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Build Frontend (Vite)
+        run: npm run build # This creates your public/dist folder
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }} # Stored as a GitHub Secret
+          password: ${{ secrets.DOCKER_TOKEN }}    # Stored as a GitHub Secret (Personal Access Token is best)
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Build context is the root of your repo
+          push: true
+          tags: |
+            lifebinder/chummer-viewer:dev
+            lifebinder/chummer-viewer:${{ github.sha }}
+            lifebinder/chummer-viewer:develop
+            lifebinder/chummer-viewer:${{ format('{0:%Y%m%d}', github.event.head_commit.timestamp) }}
+          # If your Dockerfile is not at the root, specify file: ./path/to/Dockerfile

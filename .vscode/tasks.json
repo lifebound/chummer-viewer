@@ -1,0 +1,80 @@
+// .vscode/tasks.json
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm: dev",
+            "type": "npm",
+            "script": "dev",
+            "isBackground": true, // This task will run in the background
+             "problemMatcher": { // <-- ADD THIS PROBLEM MATCHER BLOCK
+                "owner": "vite", // A unique name for this problem matcher
+                "background": {
+                    "activeOnStart": true,
+                    // Regex to match Vite's "Local: http://..." or "Vite vX.X.X dev server running at:" messages
+                    "beginsPattern": "Local:\\s*http:\\/\\/localhost:[\\d]+|Vite v\\d+\\.\\d+\\.\\d+ dev server running at:"
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "runOptions": {
+                "runOn": "default"
+            }
+        },
+        {
+            "label": "npm: start",
+            "type": "npm",
+            "script": "start",
+            "isBackground": true, // This task will also run in the background
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            },
+            "runOptions": {
+                "runOn": "default"
+            }
+        },
+        // {
+        //     "label": "npm: build", // Optional: For if you want to run build with F5
+        //     "type": "npm",
+        //     "script": "build",
+        //     "problemMatcher": [],
+        //     "presentation": {
+        //         "reveal": "always",
+        //         "panel": "dedicated",
+        //         "showReuseMessage": false,
+        //         "clear": true
+        //     }
+        // },
+        {
+            "label": "test-prelaunch",
+            "type": "shell",
+            "command": "echo 'Pre-launch task is running!'",
+            "isBackground": false, // This one should finish quickly
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "terminateAll",
+            "type": "process",
+            "command": "${command:workbench.action.tasks.terminate}",
+            "args": ["${command:workbench.action.tasks.all}"],
+            "problemMatcher": []
+        }
+    ]
+}

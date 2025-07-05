@@ -1,9 +1,9 @@
-// upload.js: Handles upload form logic and file parsing
-console.log('[upload.js] Loaded');
-import { uploadCharacterFile } from './client.js';
+// clientUplod.js: Handles upload form logic and file parsing
+console.log('[clientUplod.js] Loaded');
+import { uploadCharacterFile } from 'chummer-viewer/public/client.js';
 
 export function initUploadForm({ sectionContent, characterInput, fileName, onUpload }) {
-  console.log('[upload.js] initUploadForm called');
+  console.log('[clientUplod.js] initUploadForm called');
   const uploadForm = document.getElementById('uploadForm');
   if (!uploadForm) return;
 
@@ -15,12 +15,12 @@ export function initUploadForm({ sectionContent, characterInput, fileName, onUpl
       return;
     }
     try {
-      console.log('[upload.js] Uploading file:', file.name);
+      console.log('[clientUplod.js] Uploading file:', file.name);
       const characterData = await uploadCharacterFile(file);
-      console.log('[upload.js] Upload successful:', characterData);
+      console.log('[clientUplod.js] Upload successful:', characterData);
       if (onUpload) await onUpload(characterData);
     } catch (err) {
-      console.error('[upload.js] Upload error:', err);
+      console.error('[clientUplod.js] Upload error:', err);
       sectionContent.innerHTML = '<div style="color:#e74c3c">Network or server error.</div>';
     }
     //await onUpload(file);

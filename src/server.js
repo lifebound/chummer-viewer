@@ -96,8 +96,9 @@ app.use((req, res, next) => {
   next();
 });
 
+if(process.env.NODE_ENV === 'production') {
 app.use(express.static(path.join(__dirname, '../public/dist')));
-
+}
 // Trace IP middleware
 app.use((req, res, next) => {
   logger.http(`[server.js] HTTP ${req.method} ${req.url} from IP: ${req.headers['x-forwarded-for'] || req.socket.remoteAddress}`);

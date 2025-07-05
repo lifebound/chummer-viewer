@@ -1,0 +1,41 @@
+// .vscode/launch.json
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        // Configuration for debugging your Node.js backend
+        {
+            "name": "Debug Node.js Backend",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/server.js", // Path to your main server file
+            "cwd": "${workspaceFolder}",
+            
+            "internalConsoleOptions": "openOnSessionStart",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Fullstack Dev (Vite + Node)",
+            "configurations": [
+                "Debug Node.js Backend"
+            ],
+            "preLaunchTask": "npm: dev", // This task will run BEFORE "Debug Node.js Backend"
+            "postDebugTask": "terminateAll" // Optional: Terminates all tasks when debugging stops
+        },
+        // {
+        //     "name": "Fullstack Prod-like Local (Build + Node)", // Optional: For testing production build locally
+        //     "configurations": [
+        //         "Debug Node.js Backend"
+        //     ],
+        //     "preLaunchTask": "test-prelaunch", // Runs build before starting Node.js
+        //     "postDebugTask": "terminateAll"
+        // }
+    ]
+}

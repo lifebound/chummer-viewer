@@ -1,5 +1,5 @@
 import 'https://unpkg.com/@material/web/all.js?module';
-import { initUploadForm } from './upload.js';
+import { initUploadForm } from './clientUpload.js';
 import { renderAdaptiveNavigation,buildTabItems, showTab, renderAdaptiveNavigationDrawer } from './navigation.js';
 import { renderSpells, renderComplexForms } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
