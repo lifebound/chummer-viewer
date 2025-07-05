@@ -23,6 +23,11 @@ jobs:
 
       - name: Build Frontend (Vite)
         run: npm run build # This creates your public/dist folder
+      
+      # NEW STEP: Get current date for tag
+      - name: Get current date for Docker tag
+        id: date_tag # Assign an ID to this step to reference its outputs
+        run: echo "DATE_TAG=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT # Generates YYYYMMDD format and saves as an output
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -39,5 +44,5 @@ jobs:
             lifebinder/chummer-viewer:dev
             lifebinder/chummer-viewer:${{ github.sha }}
             lifebinder/chummer-viewer:develop
-            lifebinder/chummer-viewer:${{ format('{0:%Y%m%d}', github.event.head_commit.timestamp) }}
+            lifebinder/chummer-viewer:${{ steps.date_tag.outputs.DATE_TAG }}
           # If your Dockerfile is not at the root, specify file: ./path/to/Dockerfile
