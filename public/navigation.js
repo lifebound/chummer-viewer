@@ -54,8 +54,48 @@ export function buildTabItems(data) {
   return items;
 }
 
+export function renderAdaptiveNavigationDrawer({ items, selectedKey, onTabSelect }) {
+  console.log('[navigation.js] renderAdaptiveNavigationDrawer called');
+  console.log('[navigation.js] Items:', items);
+  const existingDrawer = document.querySelector('.main-nav');
+  const layout = document.querySelector('mdui-layout');
+  let drawer;
+  if (existingDrawer) {
+    drawer = existingDrawer;
+    console.log('Using existing mdui-navigation-drawer.', existingDrawer);
+  } else {
+    drawer = document.createElement('mdui-navigation-drawer');
+    drawer.className = 'main-nav';
+    drawer.modal = true; // Make it modal
+    drawer.close-on-esc // Allow closing with ESC
+    drawer.close-on-overlay-click; // Allow closing by clicking outside
+    drawer.contained = true; // Contained mode
+    console.log('Created new mdui-navigation-drawer.');
+    // You might want to append it to the body or a specific container here if it's new
+    // For example: document.body.appendChild(drawer);
+  }
+    drawer.innerHTML = ''; // Clear existing content
+
+  const drawerlist = document.createElement('mdui-list');
+  drawerlist.className = 'main-nav-list';
+
+  items.forEach((item) => {
+    const fontSpan = document.createElement('span');
+    fontSpan.className = 'mdui-list-item-name';
+    const listItem = document.createElement('mdui-list-item');
+    fontSpan.textContent = item.label;
+    listItem.setAttribute('value', item.key);
+    listItem.appendChild(fontSpan);
+    listItem.addEventListener('click', () => onTabSelect(item.key));
+    drawerlist.appendChild(listItem);
+  });
+
+  drawer.appendChild(drawerlist);
+  layout.appendChild(drawer);
+}
+
 export function showTab(key) {
-  let sectionContent = document.querySelectorAll('mdui-layout-main')[0];
+  let sectionContent = document.querySelector(".main-content");
   console.log('Showing tab:', key);
   sectionContent.innerHTML = '';
 
@@ -305,7 +345,7 @@ function initEventListenerUpload(){
     console.log('Tab items built:', tabItems);
     // Prefer 'Character' tab if present, else first non-upload tab
     let defaultTab = tabItems.find(t => t.key === 'character') || tabItems.find(t => t.key !== 'upload');
-    renderAdaptiveNavigation({ items: tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
+    renderAdaptiveNavigationDrawer({ items: tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
     showTab(defaultTab.key);
   } catch (err) {
     console.error('Network or server error:', err);

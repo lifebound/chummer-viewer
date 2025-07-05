@@ -1,6 +1,6 @@
 import 'https://unpkg.com/@material/web/all.js?module';
 import { initUploadForm } from './upload.js';
-import { renderAdaptiveNavigation } from './navigation.js';
+import { renderAdaptiveNavigation,buildTabItems, showTab, renderAdaptiveNavigationDrawer } from './navigation.js';
 import { renderSpells, renderComplexForms } from './renderers.js';
 import { skillAttributeMap } from './skillAttributeMap.js';
 import { spellDescriptions, complexFormDescriptions } from './spellDescriptions.js';
@@ -10,7 +10,6 @@ import '@mdui/icons/watch-later--outlined.js';
 import '@mdui/icons/image--outlined.js';
 import '@mdui/icons/library-music--outlined.js';
 import { renderCharacterTab } from './characterDisplay.js';
-import { buildTabItems, showTab } from './navigation.js';
 
 const sectionContent = document.querySelectorAll('mdui-layout-main')[0];
 var fileName = document.getElementById('fileName');
@@ -39,7 +38,7 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('Tab items built:', tabItems);
     // Prefer 'Character' tab if present, else first non-upload tab
     let defaultTab = tabItems.find(t => t.key === 'character') || tabItems.find(t => t.key !== 'upload');
-    renderAdaptiveNavigation({ items: tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
+    renderAdaptiveNavigationDrawer({ items: tabItems, selectedKey: defaultTab.key, onTabSelect: showTab });
     showTab('upload', sectionContent);
   //initUploadForm({ sectionContent, characterInput, fileName, onUpload: () => {} });
   let tabBar = document.getElementById('mdTabs');

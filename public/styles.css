@@ -1,376 +1,52 @@
-/* Material You (Material 3) inspired dark theme for Chummer Viewer */
+
+/* Define CSS Variables for common values */
 :root {
-  --md-sys-color-primary: #d0bcff;
-  --md-sys-color-on-primary: #381e72;
-  --md-sys-color-secondary: #ccc2dc;
-  --md-sys-color-on-secondary: #332d41;
-  --md-sys-color-surface: #1c1b1f;
-  --md-sys-color-on-surface: #e6e1e5;
-  --md-sys-color-background: #121212;
-  --md-sys-color-outline: #49454f;
-  --md-sys-shape-corner-medium: 28px;
+    /* Top Bar Heights */
+    --top-bar-height-mobile: 56px;
+    --top-bar-height-tablet: 64px;
+    --top-bar-height-desktop: 72px;
+
+    /* Right Nav Rail Widths */
+    --nav-rail-width-tablet: 200px;
+    --nav-rail-width-desktop: 300px;
 }
+html{
+  -webkit-text-size-adjust: 100%;
+}
+/* Base Styles (Mobile-first) */
+
 body {
-  font-family: 'Roboto', Arial, sans-serif;
-  background: var(--md-sys-color-background);
-  color: var(--md-sys-color-on-surface);
-  margin: 0;
-}
-h1, h2, h3 {
-  font-weight: 500;
-  color: var(--md-sys-color-primary);
-  letter-spacing: 0.01em;
-}
-main {
-  max-width: 800px;
-  margin: 0 auto;
-  background: var(--md-sys-color-surface);
-  border-radius: var(--md-sys-shape-corner-medium);
-  box-shadow: 0 2px 8px #000a;
-  padding: 2em;
-}
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5em;
-  margin-bottom: 2em;
-}
-mwc-button, .mdc-button, .mdc-button__label {
-  --mdc-theme-primary: var(--md-sys-color-primary);
-  --mdc-theme-on-primary: var(--md-sys-color-on-primary);
-  --mdc-theme-surface: var(--md-sys-color-surface);
-  --mdc-theme-on-surface: var(--md-sys-color-on-surface);
-  font-family: 'Roboto', Arial, sans-serif;
-  font-weight: 500;
-  font-size: 1.1em;
-  border-radius: 20px;
-  letter-spacing: 0.03em;
-}
-.material-file-input {
-  padding: 0.75em 2em;
-  border-radius: 20px;
-  border: none;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-family: 'Roboto', Arial, sans-serif;
-  font-weight: 500;
-  font-size: 1.1em;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.2s;
-  width: fit-content;
-  align-self: flex-start;
-  margin-bottom: 1em;
-}
-.material-file-input::-webkit-file-upload-button {
-  padding: 0.75em 2em;
-  border-radius: 20px;
-  border: none;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-family: 'Roboto', Arial, sans-serif;
-  font-weight: 500;
-  font-size: 1.1em;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.material-file-input::file-selector-button {
-  padding: 0.75em 2em;
-  border-radius: 20px;
-  border: none;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-family: 'Roboto', Arial, sans-serif;
-  font-weight: 500;
-  font-size: 1.1em;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-#section-content {
-  margin-top: 2em;
-  background: #23232b;
-  border-radius: 20px;
-  box-shadow: 0 1px 4px #0004;
-  padding: 1.5em;
-  color: #e6e1e5;
-  font-size: 1.05em;
-  overflow-x: auto;
-}
-pre {
-  background: #23232b;
-  border-radius: 12px;
-  padding: 1em;
-  color: #e6e1e5;
-  font-size: 1em;
-  overflow-x: auto;
+    margin: 0;
+    font-family: sans-serif;
 }
 
-
-.chummer-card {
-  border: 1px solid var(--md-sys-color-outline, #ccc);
-  border-radius: 12px;
-  padding: 1em 1.5em;
-  background: var(--md-sys-color-surface-variant, #23272e);
-  color: var(--md-sys-color-on-surface, #fff);
-  margin-bottom: 1.5em;
+/* Right-side Navigation Rail */
+mdui-navigation-rail {
+    position: fixed;
+    top: var(--top-bar-height-mobile); /* Starts below the top bar */
+    right: 0;
+    height: calc(100vh - var(--top-bar-height-mobile));
+    overflow-y: auto; /* Enable scrolling for content within the rail */
+    z-index: 900; /* Below top bar, above content */
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out; /* Smooth transition */
+    
+    box-sizing: border-box;
 }
-.chummer-card-title {
-  font-size: 1.25em;
-  font-weight: bold;
-  margin-bottom: 0.2em;
-  cursor: pointer;
-}
-.chummer-card-details {
-  display: flex;
-  gap: 2em;
-  margin-bottom: 0.2em;
-  flex-wrap: wrap;
-}
-.chummer-card-extra {
-  margin-bottom: 0.2em;
-  font-size: 1em;
-  font-weight: 500;
-}
-.chummer-card-source {
-  font-size: 0.95em;
-  color: var(--md-sys-color-secondary, #888);
-  margin-top: 0.2em;
-}
-.chummer-card-switch-label {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-}
-.chummer-card-switch-text {
-  font-weight: 500;
-  color: var(--md-sys-color-primary, #4a90e2);
-}
-.chummer-mdc-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.chummer-mdc-list-item {
-  display: flex;
-  align-items: center;
-  padding-left: 0;
-}
-.chummer-mdc-list-meta {
-  margin-left: 1em;
-}
-.chummer-mdc-list-expand {
-  cursor: pointer;
-  margin-right: 0.5em;
-}
-.chummer-mdc-list-indent {
-  padding-left: 2em;
-}
-/* Login/Register Area */
-.chummer-login-area {
-  max-width: 400px;
-  margin: 3em auto;
-  padding: 2em;
-  background: var(--md-sys-color-surface, #222);
-  border-radius: 16px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-}
-.chummer-login-title {
-  color: var(--md-sys-color-on-surface, #fff);
-}
-.chummer-login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
-.chummer-login-input {
-  padding: 0.75em;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: 1px solid var(--md-sys-color-outline, #444);
-  background: var(--md-sys-color-surface, #222);
-  color: var(--md-sys-color-on-surface, #fff);
-}
-.chummer-login-btn {
-  padding: 0.75em;
-  font-size: 1.1em;
-  border-radius: 8px;
-  background: var(--md-sys-color-primary, #4a90e2);
-  color: var(--md-sys-color-on-primary, #fff);
-  border: none;
-  cursor: pointer;
-}
-.chummer-register-link {
-  font-size: 0.95em;
-  color: var(--md-sys-color-primary, #d0bcff);
-  text-align: center;
-  margin-top: 0.5em;
-  text-decoration: none;
-}
-.chummer-logout-btn {
-  display: none;
-  margin-top: 1em;
-  padding: 0.75em;
-  font-size: 1.1em;
-  border-radius: 8px;
-  background: var(--md-sys-color-error, #e24a4a);
-  color: var(--md-sys-color-on-error, #fff);
-  border: none;
-  cursor: pointer;
-}
-.chummer-login-message {
-  color: var(--md-sys-color-warning, #ffb);
-  margin-top: 1em;
-}
-
-/* Registration Modal */
-#register-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
+mdui-layout {
+  min-height: 100vh;
   height: 100vh;
-  background: rgba(0,0,0,0.5);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  flex-direction: row;
 }
-.chummer-register-modal-content {
-  background: var(--md-sys-color-surface, #222);
-  padding: 2em 2.5em;
-  border-radius: 16px;
-  box-shadow: 0 2px 16px #000a;
-  max-width: 400px;
-  width: 100%;
-  position: relative;
+mdui-layout-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  height: 100vh;
+  
 }
-.chummer-register-close {
-  position: absolute;
-  top: 0.5em;
-  right: 0.5em;
-  background: none;
-  border: none;
-  font-size: 1.5em;
-  color: var(--md-sys-color-on-surface, #fff);
-  cursor: pointer;
-}
-.chummer-register-title {
-  color: var(--md-sys-color-primary, #d0bcff);
-  margin-bottom: 1em;
-}
-.chummer-register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-}
-.chummer-register-input {
-  padding: 0.75em;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: 1px solid var(--md-sys-color-outline, #444);
-  background: var(--md-sys-color-surface, #222);
-  color: var(--md-sys-color-on-surface, #fff);
-}
-.chummer-register-btn {
-  padding: 0.75em;
-  font-size: 1.1em;
-  border-radius: 8px;
-  background: var(--md-sys-color-primary, #4a90e2);
-  color: var(--md-sys-color-on-primary, #fff);
-  border: none;
-  cursor: pointer;
-}
-.chummer-register-message {
-  color: var(--md-sys-color-warning, #ffb);
-  margin-top: 1em;
-}
-.cm-tracker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5em;
-  padding: 0.4em 0.8em;
-  border-radius: 0.5em;
-  background: var(--md-sys-color-surface, #fff);
-  transition: background 0.2s;
-}
-.cm-tracker .cm-value {
-  font-weight: bold;
-  font-size: 1.2em;
-  min-width: 2em;
-  text-align: center;
-  transition: color 0.2s;
-}
-
-.cm-tracker .cm-value.cm-danger {
-  color: var(--md-sys-color-warning, #b26a00);
-  font-weight: bold;
-}
-.cm-tracker.cm-overflow {
-  /* Red for dead */
-  background: var(--md-sys-color-surface, #fff);
-}
-.cm-tracker .cm-value.cm-overflow {
-  color: var(--md-sys-color-error, #b00020);
-  font-weight: bold;
-}
-@media (max-width: 600px) {
-  main {
-    padding: 1em;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  #section-content {
-    padding: 1em;
-    border-radius: 0;
-  }
-  #mdTabs {
-    width: 100vw;
-    min-width: 0;
-    max-width: 100vw;
-    overflow-x: auto;
-    font-size: 1em;
-  }
-}
-@media (min-width: 601px) and (max-width: 1024px) {
-  #mdTabs {
-    display: none !important;
-  }
-  #mdRail {
-    display: flex !important;
-    flex-direction: column;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    width: 80px;
-    background: var(--md-sys-color-surface);
-    box-shadow: 2px 0 8px #0002;
-    z-index: 10;
-  }
-  main {
-    margin-left: 80px;
-  }
-}
-@media (min-width: 1025px) {
-  #mdTabs {
-    display: none !important;
-  }
-  #mdDrawer {
-    display: block !important;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    width: 240px;
-    background: var(--md-sys-color-surface);
-    box-shadow: 2px 0 8px #0002;
-    z-index: 10;
-  }
-  main {
-    margin-left: 240px;
-  }
+.main-content {
+    padding: 16px; /* Add some padding for content */
 }
 mdui-card span {
   display: block;
@@ -388,70 +64,86 @@ mdui-card span {
   padding: 1rem; /* 16px */
   box-sizing: border-box;
 }
-@media (max-width: 1025px) {
-  .chummer-card, mdui-card {
+
+/* Tablet Styles */
+@media (min-width: 600px) {
+    /* Top Bar */
+    mdui-top-app-bar {
+        height: var(--top-bar-height-tablet);
+        
+        font-size: 1.5rem;
+    }
+
+    /* Right-side Navigation Rail */
+    mdui-navigation-rail {
+        top: var(--top-bar-height-tablet);
+        height: calc(100vh - var(--top-bar-height-tablet));
+        width: calc(1.6 * var(--nav-rail-width-tablet)); /* Visible on tablet */
+        display: block; /* Make visible */
+        
+    }
+    mdui-list-item{
+      padding-bottom: 1.5rem;
+    }
+    /* Content Area */
+    mdui-layout-main {
+        margin-top: var(--top-bar-height-tablet);
+        margin-right: var(--nav-rail-width-tablet); /* Make space for the right rail */
+        min-height: calc(100vh - var(--top-bar-height-tablet));
+    }
+    .main-nav {
+        width: calc(1.6 * var(--nav-rail-width-tablet)); /* Visible on tablet */
+    }
+    .mdui-list-item-name {
+        font-size: 3rem; /* Adjust font size for better readability */
+        line-height: 3rem;
+    }
+    .main-content {
+        padding: 24px; /* Add more padding for tablet */
+        font-size: 1.8rem;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1024px) {
+    /* Top Bar */
+    mdui-top-app-bar {
+        height: var(--top-bar-height-desktop);
+       
+        font-size: 1.75rem;
+    }
+
+    /* Right-side Navigation Rail */
+    mdui-navigation-rail {
+        top: var(--top-bar-height-desktop);
+        height: calc(100vh - var(--top-bar-height-desktop));
+        width: var(--nav-rail-width-desktop); /* Wider on desktop */
+      
+    }
+    mdui-list-item{
+      padding-bottom: 1.2rem;
+    }
+    /* Content Area */
+    mdui-layout-main {
+        margin-top: var(--top-bar-height-desktop);
+        margin-right: var(--nav-rail-width-desktop); /* Make space for the right rail */
+        
+        min-height: calc(100vh - var(--top-bar-height-desktop));
+    }
+    .main-nav {
+        width: var(--nav-rail-width-desktop); /* Wider on desktop */
+    }
+    .mdui-list-item-name {
+        font-size: 1.5rem; /* Adjust font size for better readability */
+        line-height: 1.7rem;
+    }
+    .main-content {
+        padding: 32px; /* Add more padding for desktop */
+        font-size: 1.5rem;
+    }
+    .chummer-card, mdui-card {
     margin-bottom: 0.5rem; /* 8px */
     padding: 0.75rem;      /* 12px */
   }
-}
- html, body {
-  height: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-}
-@media (max-width: 1100px) {
-  html, body {
-    font-size: 30px;
-  }
-  mdui-top-app-bar-title {
-    font-size: 1.3em;
-  }
-  mdui-navigation-rail {
-    width: 100px;
-    min-width: 100px;
-  }
-  mdui-navigation-rail-item {
-    font-size: 1.1em;
-    min-height: 80px;
-    padding: 0.75em 0.5em;
-  }
-  mdui-button, button, input[type="file"] {
-    font-size: 1.1em;
-    min-height: 75px;
-    padding: 0.75em 1.5em;
-  }
-  .material-file-input {
-    font-size: 1.1em;
-    min-height: 48px;
-    padding: 0.75em 0.5em;
-  }
-  form#uploadForm {
-    gap: 2em;
-  }
-}
-mdui-layout {
-  min-height: 100vh;
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
 
-mdui-layout-main {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  height: 100vh;
-}
-mdui-navigation-rail {
-  height: 100vh;
-  max-height: 100vh;
-  overflow-y: auto;
-  flex-shrink: 0;
-  /* Optional: for touch devices */
-  -webkit-overflow-scrolling: touch;
-  position: sticky;
-  top: 0;
-  z-index: 2;
 }
