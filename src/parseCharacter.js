@@ -5,7 +5,7 @@ const winston = require('winston');
 const { parse } = require('uuid');
 
 const logger = winston.createLogger({
-  level: 'debug',
+  level: 'warn',
   format: winston.format.json(),
   defaultMeta: { service: 'user-service' },
   transports: [

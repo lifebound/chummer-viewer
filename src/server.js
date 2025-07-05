@@ -31,7 +31,7 @@ const upload = multer({ dest: 'uploads/' });
 
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'warn',
   format: winston.format.json(),
   //defaultMeta: { service: 'user-service' },
   transports: [
@@ -96,7 +96,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../public/dist')));
 
 // Trace IP middleware
 app.use((req, res, next) => {
@@ -118,12 +118,12 @@ app.post('/upload', upload.single('character'), async (req, res) => {
     // Sanitize alias for filename
     const summary = parseCharacter(json);
     const safeAlias = (summary.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_');
-    fs.writeFileSync(`debug-chummer-dump-${safeAlias}.json`, JSON.stringify(json, null, 2));
-    // Clean up uploaded file after processing
-    fs.unlink(req.file.path, err => {
-      if (err) logger.warn(`[server.js] Failed to delete uploaded file: ${req.file.path}`);
-      else logger.debug(`[server.js] Deleted uploaded file: ${req.file.path}`);
-    });
+    // fs.writeFileSync(`debug-chummer-dump-${safeAlias}.json`, JSON.stringify(json, null, 2));
+    // // Clean up uploaded file after processing
+    // fs.unlink(req.file.path, err => {
+    //   if (err) logger.warn(`[server.js] Failed to delete uploaded file: ${req.file.path}`);
+    //   else logger.debug(`[server.js] Deleted uploaded file: ${req.file.path}`);
+    // });
     // If authenticated, store JSON in DB
     if (req.session && req.session.userId) {
       logger.debug(`[server.js] Authenticated upload: storing character for userId=${req.session.userId}, name=${summary.name}`);
