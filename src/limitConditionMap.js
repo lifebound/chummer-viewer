@@ -4,7 +4,7 @@
 const winston = require('winston');
 // Logger setup (inherits from parent app, but fallback for direct use)
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || 'warn',
   format: winston.format.json(),
   transports: [
     new winston.transports.File({ filename: 'error.log', level: 'error' }),

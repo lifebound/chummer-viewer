@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html class="mdui-theme-auto">
 <head>
-  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' https://unpkg.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;
+    font-src 'self' https://fonts.gstatic.com;
+    "
+>
   <title>Chummer Character Viewer</title>
   
   <!-- Material Web Components CDN -->
   <script type="module" src="https://unpkg.com/@material/web/all.js?module"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+   <!-- <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css"> -->
 
   <!-- <script src="https://unpkg.com/mdui@2/mdui.global.js"></script> -->
   <!-- Filled -->
@@ -57,7 +64,7 @@
       JavaScript is disabled or blocked. This app requires JavaScript for the interactive UI. Please enable JavaScript in your browser.
     </div>
   </noscript>
-  <script src="/app.js" type="module"></script>
+  
   <script>
     const drawer = document.querySelector('mdui-navigation-drawer'); // Assuming the drawer exists
 
@@ -84,5 +91,6 @@ updateDrawerModalState();
 window.addEventListener('resize', updateDrawerModalState);
 
   </script>
+  <script src="/app.js" type="module"></script>
 </body>
 </html>

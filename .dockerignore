@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+uploads
+*.chum5
+*.log
+.env
+debug-chummer-dump*.json
