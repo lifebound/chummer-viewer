@@ -1,6 +1,6 @@
 // clientUplod.js: Handles upload form logic and file parsing
 console.log('[clientUplod.js] Loaded');
-import { uploadCharacterFile } from 'chummer-viewer/public/client.js';
+import { uploadCharacterFile } from './client.js';
 
 export function initUploadForm({ sectionContent, characterInput, fileName, onUpload }) {
   console.log('[clientUplod.js] initUploadForm called');
